@@ -34,6 +34,7 @@ class Menu:
         )
 
         selected = 0
+        total_items = len(self.courses) + 1  # Including Quit
         need_redraw = True  # Initial draw
 
         while True:
@@ -127,9 +128,9 @@ class Menu:
                     break
                 changed = True
                 if key in (curses.KEY_UP, ord("k")):
-                    selected = max(0, selected - 1)
+                    selected = (selected - 1) % total_items
                 elif key in (curses.KEY_DOWN, ord("j")):
-                    selected = min(len(self.courses), selected + 1)
+                    selected = (selected + 1) % total_items
                 elif key in (curses.KEY_LEFT, ord("h")):
                     selected = 0
                 elif key in (curses.KEY_RIGHT, ord("l")):
@@ -146,7 +147,9 @@ class Menu:
                             from modules.lesson_sequencer import LessonSequencer
 
                             sequencer = LessonSequencer(
-                                course.name, part.sections[0].lessons, doc_mode=self.doc_mode
+                                course.name,
+                                part.sections[0].lessons,
+                                doc_mode=self.doc_mode,
                             )
                             sequencer.run(stdscr)
                             stdscr.nodelay(True)  # Reset after lesson
@@ -180,6 +183,7 @@ class Menu:
         )
 
         selected = 0
+        total_items = len(course.parts) + 1  # Including Back
         need_redraw = True  # Initial draw
 
         while True:
@@ -257,9 +261,9 @@ class Menu:
                     break
                 changed = True
                 if key in (curses.KEY_UP, ord("k")):
-                    selected = max(0, selected - 1)
+                    selected = (selected - 1) % total_items
                 elif key in (curses.KEY_DOWN, ord("j")):
-                    selected = min(len(course.parts), selected + 1)
+                    selected = (selected + 1) % total_items
                 elif key in (curses.KEY_LEFT, ord("h")):
                     selected = 0
                 elif key in (curses.KEY_RIGHT, ord("l")):
@@ -272,7 +276,9 @@ class Menu:
                         from modules.lesson_sequencer import LessonSequencer
 
                         sequencer = LessonSequencer(
-                            f"{course.name}: {part.name}", part.sections[0].lessons, doc_mode=self.doc_mode
+                            f"{course.name}: {part.name}",
+                            part.sections[0].lessons,
+                            doc_mode=self.doc_mode,
                         )
                         sequencer.run(stdscr)
                         stdscr.nodelay(True)  # Reset after lesson
@@ -301,6 +307,7 @@ class Menu:
         )
 
         selected = 0
+        total_items = len(part.sections) + 1  # Including Back
         need_redraw = True  # Initial draw
 
         while True:
@@ -378,9 +385,9 @@ class Menu:
                     break
                 changed = True
                 if key in (curses.KEY_UP, ord("k")):
-                    selected = max(0, selected - 1)
+                    selected = (selected - 1) % total_items
                 elif key in (curses.KEY_DOWN, ord("j")):
-                    selected = min(len(part.sections), selected + 1)
+                    selected = (selected + 1) % total_items
                 elif key in (curses.KEY_LEFT, ord("h")):
                     selected = 0
                 elif key in (curses.KEY_RIGHT, ord("l")):
@@ -392,7 +399,9 @@ class Menu:
                     from modules.lesson_sequencer import LessonSequencer
 
                     sequencer = LessonSequencer(
-                        f"{course.name}: {part.name}: {section.name}", section.lessons, doc_mode=self.doc_mode
+                        f"{course.name}: {part.name}: {section.name}",
+                        section.lessons,
+                        doc_mode=self.doc_mode,
                     )
                     sequencer.run(stdscr)
                     stdscr.nodelay(True)  # Reset after lesson
