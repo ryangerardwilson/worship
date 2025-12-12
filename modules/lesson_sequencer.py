@@ -46,7 +46,7 @@ class LessonSequencer:
                 tabs = [i for i, c in enumerate(line) if c == "\t"]  # Tab indices
                 processed_lines.append(non_tabs)
                 tab_positions.append(tabs)
-                is_skip.append(line.lstrip().startswith(("#!", "//!")))
+                is_skip.append(line.lstrip().startswith(("#!", "//!", "--!")))
 
             current_line = 0
             user_inputs = [[] for _ in lines]  # Store input for non-tab chars
@@ -176,7 +176,7 @@ class LessonSequencer:
 
                     # Display instructions at bottom - 1
                     if lesson_finished:
-                        instr = "Lesson complete! Hit → for next lesson or esc to exit"
+                        instr = "Lesson complete! Hit l for next lesson or esc to exit"
                     else:
                         instr = "Ctrl+R ->restart | ESC -> quit"
                     try:
@@ -232,7 +232,7 @@ class LessonSequencer:
                             sys.exit(0)
 
                         if lesson_finished:
-                            if key == curses.KEY_RIGHT:
+                            if key == ord("l") or key == ord("L"):
                                 completed = True
                             elif key == 27:  # ESC or Alt prefix
                                 next_key = stdscr.getch()
