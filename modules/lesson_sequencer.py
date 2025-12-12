@@ -176,7 +176,7 @@ class LessonSequencer:
 
                     # Display instructions at bottom - 1
                     if lesson_finished:
-                        instr = "Lesson complete! Hit n for next lesson or esc to exit"
+                        instr = "Lesson complete! Hit → for next lesson or esc to exit"
                     else:
                         instr = "Ctrl+R ->restart | ESC -> quit"
                     try:
@@ -232,7 +232,7 @@ class LessonSequencer:
                             sys.exit(0)
 
                         if lesson_finished:
-                            if key == ord("n") or key == ord("N"):
+                            if key == curses.KEY_RIGHT:
                                 completed = True
                             elif key == 27:  # ESC or Alt prefix
                                 next_key = stdscr.getch()

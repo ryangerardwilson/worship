@@ -22,94 +22,78 @@ class Menu:
         need_redraw = True
 
         while True:
-            max_y, max_x = stdscr.getmaxyx()
-            total_items = len(self.courses)
-            if total_items == 0:
+            if not self.courses:
                 return
 
+            max_y, max_x = stdscr.getmaxyx()
             title_lines = self.title_ascii_art.count("\n")
             menu_start_y = title_lines + 4
 
             art_lines = self.title_ascii_art.split("\n")
-            content_width = max((len(line) for line in art_lines), default=0)
+            content_width = max((len(l) for l in art_lines if l), default=0)
             menu_width = max((len(f"> {c.name}") for c in self.courses), default=0)
 
             if need_redraw:
                 stdscr.clear()
 
+                # Title art
                 for i, line in enumerate(art_lines):
                     if line:
-                        x_pos = max((max_x - content_width) // 2, 0)
-                        try:
-                            stdscr.addstr(i, x_pos, line[:max_x], curses.color_pair(2))
-                        except curses.error:
-                            pass
+                        x = max((max_x - content_width) // 2, 0)
+                        stdscr.addstr(i, x, line[:max_x], curses.color_pair(2))
 
-                author_text = "By Ryan Gerard Wilson"
-                try:
-                    stdscr.addstr(title_lines + 1, (max_x - len(author_text)) // 2, author_text, curses.color_pair(2))
-                except curses.error:
-                    pass
+                # Author
+                author = "By Ryan Gerard Wilson"
+                stdscr.addstr(title_lines + 1, (max_x - len(author)) // 2, author, curses.color_pair(2))
 
-                menu_x_pos = (max_x - menu_width) // 2 if menu_width < max_x else 0
+                # Menu items
+                mx = (max_x - menu_width) // 2 if menu_width < max_x else 0
                 for i, course in enumerate(self.courses):
                     prefix = "> " if i == selected else "  "
-                    text = f"{prefix}{course.name}"
-                    try:
-                        stdscr.addstr(
-                            menu_start_y + i,
-                            menu_x_pos,
-                            text,
-                            curses.color_pair(1) if i == selected else curses.color_pair(2),
-                        )
-                        stdscr.clrtoeol()
-                    except curses.error:
-                        pass
+                    stdscr.addstr(menu_start_y + i, mx, f"{prefix}{course.name}",
+                                  curses.color_pair(1) if i == selected else curses.color_pair(2))
+                    stdscr.clrtoeol()
 
                 stdscr.refresh()
                 need_redraw = False
 
-            changed = False
-            while True:
-                key = stdscr.getch()
-                if key == -1:
-                    break
-                changed = True
+            key = stdscr.getch()
+            if key == -1:
+                continue
 
-                kn = curses.keyname(key).lower()
-
-                # EMACS OR DEATH
-                if kn == b"^p" or key == curses.KEY_UP:          # Previous line
-                    selected = (selected - 1) % total_items
-                elif kn == b"^n" or key == curses.KEY_DOWN:      # Next line
-                    selected = (selected + 1) % total_items
-                elif kn == b"^a":                                # Beginning of list
-                    selected = 0
-                elif kn == b"^e":                                # End of list
-                    selected = total_items - 1
-                elif kn in (b"^f", b"^l"):                       # Forward → enter menu
-                    course = self.courses[selected]
-                    if len(course.parts) == 1 and course.parts[0].name == "Main":
-                        part = course.parts[0]
-                        if len(part.sections) == 1 and part.sections[0].name == "Main":
-                            from modules.lesson_sequencer import LessonSequencer
-                            sequencer = LessonSequencer(course.name, part.sections[0].lessons, doc_mode=self.doc_mode)
-                            sequencer.run(stdscr)
-                        else:
-                            self.run_section_menu(stdscr, course, part)
-                    else:
-                        self.run_part_menu(stdscr, course)
-                    stdscr.nodelay(True)
-                    curses.curs_set(0)
-                    need_redraw = True
-
-                elif kn in (b"^b", b"^h") or key == 27:           # Back or ESC
-                    stdscr.nodelay(False)
-                    return
-
-            if changed:
+            if key == curses.KEY_UP:
+                selected = (selected - 1) % len(self.courses)
                 need_redraw = True
 
+            elif key == curses.KEY_DOWN:
+                selected = (selected + 1) % len(self.courses)
+                need_redraw = True
+
+            elif key in (curses.KEY_RIGHT, ord('\n'), ord('\r'), curses.KEY_ENTER):
+                course = self.courses[selected]
+
+                # Case 1: single part "Main" → single section "Main" → go straight to lessons
+                if (len(course.parts) == 1 and course.parts[0].name == "Main" and
+                    len(course.parts[0].sections) == 1 and course.parts[0].sections[0].name == "Main"):
+                    from modules.lesson_sequencer import LessonSequencer
+                    sequencer = LessonSequencer(course.name, course.parts[0].sections[0].lessons,
+                                               doc_mode=self.doc_mode)
+                    sequencer.run(stdscr)
+
+                # Case 2: single part "Main" → show its sections
+                elif len(course.parts) == 1 and course.parts[0].name == "Main":
+                    self.run_section_menu(stdscr, course, course.parts[0])
+
+                # Case 3: multiple parts → show part menu
+                else:
+                    self.run_part_menu(stdscr, course)
+
+                need_redraw = True
+
+            elif key in (curses.KEY_LEFT, 27):  # Left or Esc → exit
+                return
+
+    # -------------------------------------------------------------------------
     def run_part_menu(self, stdscr, course):
         curses.curs_set(0)
         stdscr.nodelay(True)
@@ -117,10 +101,9 @@ class Menu:
         need_redraw = True
 
         while True:
-            total_items = len(course.parts)
-            menu_start_y = 2
-            menu_width = max((len(f"> {p.name}") for p in course.parts), default=0)
+            parts = course.parts
             max_y, max_x = stdscr.getmaxyx()
+            menu_width = max((len(f"> {p.name}") for p in parts), default=0)
 
             if need_redraw:
                 stdscr.clear()
@@ -129,49 +112,39 @@ class Menu:
                 stdscr.move(1, 0)
                 stdscr.clrtoeol()
 
-                menu_x_pos = (max_x - menu_width) // 2 if menu_width < max_x else 0
-                for i, part in enumerate(course.parts):
+                mx = (max_x - menu_width) // 2 if menu_width < max_x else 0
+                for i, part in enumerate(parts):
                     prefix = "> " if i == selected else "  "
-                    stdscr.addstr(menu_start_y + i, menu_x_pos, f"{prefix}{part.name}",
+                    stdscr.addstr(2 + i, mx, f"{prefix}{part.name}",
                                   curses.color_pair(1) if i == selected else curses.color_pair(2))
                     stdscr.clrtoeol()
                 stdscr.refresh()
                 need_redraw = False
 
-            changed = False
-            while True:
-                key = stdscr.getch()
-                if key == -1:
-                    break
-                changed = True
+            key = stdscr.getch()
+            if key == -1:
+                continue
 
-                kn = curses.keyname(key).lower()
-
-                if kn == b"^p" or key == curses.KEY_UP:
-                    selected = (selected - 1) % total_items
-                elif kn == b"^n" or key == curses.KEY_DOWN:
-                    selected = (selected + 1) % total_items
-                elif kn == b"^a":
-                    selected = 0
-                elif kn == b"^e":
-                    selected = total_items - 1
-                elif kn in (b"^f", b"^l"):  # Forward → enter
-                    part = course.parts[selected]
-                    if len(part.sections) == 1 and part.sections[0].name == "Main":
-                        from modules.lesson_sequencer import LessonSequencer
-                        sequencer = LessonSequencer(f"{course.name}: {part.name}", part.sections[0].lessons, doc_mode=self.doc_mode)
-                        sequencer.run(stdscr)
-                    else:
-                        self.run_section_menu(stdscr, course, part)
-                    stdscr.nodelay(True)
-                    curses.curs_set(0)
-                    need_redraw = True
-                elif kn in (b"^b", b"^h") or key == 27:
-                    return
-
-            if changed:
+            if key == curses.KEY_UP:
+                selected = (selected - 1) % len(parts)
                 need_redraw = True
+            elif key == curses.KEY_DOWN:
+                selected = (selected + 1) % len(parts)
+                need_redraw = True
+            elif key in (curses.KEY_RIGHT, ord('\n'), ord('\r'), curses.KEY_ENTER):
+                part = parts[selected]
+                if len(part.sections) == 1 and part.sections[0].name == "Main":
+                    from modules.lesson_sequencer import LessonSequencer
+                    sequencer = LessonSequencer(f"{course.name}: {part.name}",
+                                               part.sections[0].lessons, doc_mode=self.doc_mode)
+                    sequencer.run(stdscr)
+                else:
+                    self.run_section_menu(stdscr, course, part)
+                need_redraw = True
+            elif key in (curses.KEY_LEFT, 27):
+                return
 
+    # -------------------------------------------------------------------------
     def run_section_menu(self, stdscr, course, part):
         curses.curs_set(0)
         stdscr.nodelay(True)
@@ -179,10 +152,9 @@ class Menu:
         need_redraw = True
 
         while True:
-            total_items = len(part.sections)
-            menu_start_y = 2
-            menu_width = max((len(f"> {s.name}") for s in part.sections), default=0)
+            sections = part.sections
             max_y, max_x = stdscr.getmaxyx()
+            menu_width = max((len(f"> {s.name}") for s in sections), default=0)
 
             if need_redraw:
                 stdscr.clear()
@@ -191,42 +163,30 @@ class Menu:
                 stdscr.move(1, 0)
                 stdscr.clrtoeol()
 
-                menu_x_pos = (max_x - menu_width) // 2 if menu_width < max_x else 0
-                for i, section in enumerate(part.sections):
+                mx = (max_x - menu_width) // 2 if menu_width < max_x else 0
+                for i, section in enumerate(sections):
                     prefix = "> " if i == selected else "  "
-                    stdscr.addstr(menu_start_y + i, menu_x_pos, f"{prefix}{section.name}",
+                    stdscr.addstr(2 + i, mx, f"{prefix}{section.name}",
                                   curses.color_pair(1) if i == selected else curses.color_pair(2))
                     stdscr.clrtoeol()
                 stdscr.refresh()
                 need_redraw = False
 
-            changed = False
-            while True:
-                key = stdscr.getch()
-                if key == -1:
-                    break
-                changed = True
+            key = stdscr.getch()
+            if key == -1:
+                continue
 
-                kn = curses.keyname(key).lower()
-
-                if kn == b"^p" or key == curses.KEY_UP:
-                    selected = (selected - 1) % total_items
-                elif kn == b"^n" or key == curses.KEY_DOWN:
-                    selected = (selected + 1) % total_items
-                elif kn == b"^a":
-                    selected = 0
-                elif kn == b"^e":
-                    selected = total_items - 1
-                elif kn in (b"^f", b"^l"):  # Forward → start lesson
-                    section = part.sections[selected]
-                    from modules.lesson_sequencer import LessonSequencer
-                    sequencer = LessonSequencer(f"{course.name}: {part.name}: {section.name}", section.lessons, doc_mode=self.doc_mode)
-                    sequencer.run(stdscr)
-                    stdscr.nodelay(True)
-                    curses.curs_set(0)
-                    need_redraw = True
-                elif kn in (b"^b", b"^h") or key == 27:
-                    return
-
-            if changed:
+            if key == curses.KEY_UP:
+                selected = (selected - 1) % len(sections)
                 need_redraw = True
+            elif key == curses.KEY_DOWN:
+                selected = (selected + 1) % len(sections)
+                need_redraw = True
+            elif key in (curses.KEY_RIGHT, ord('\n'), ord('\r'), curses.KEY_ENTER):
+                from modules.lesson_sequencer import LessonSequencer
+                sequencer = LessonSequencer(f"{course.name}: {part.name}: {sections[selected].name}",
+                                           sections[selected].lessons, doc_mode=self.doc_mode)
+                sequencer.run(stdscr)
+                need_redraw = True
+            elif key in (curses.KEY_LEFT, 27):
+                return
