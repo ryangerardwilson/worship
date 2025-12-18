@@ -140,7 +140,7 @@ class CourseParser:
                 parts.append(current_part)
 
             if course_name and parts:
-                return Course(course_name, parts)
+                return Course(course_name, parts, source_file=filepath)
             return None
 
         elif has_parts:
@@ -222,7 +222,7 @@ class CourseParser:
                 parts.append(current_part)
 
             if course_name and parts:
-                return Course(course_name, parts)
+                return Course(course_name, parts, source_file=filepath)
             return None
 
         else:
@@ -283,5 +283,5 @@ class CourseParser:
             if course_name and lessons:
                 sections = [Section("Main", lessons)]
                 parts = [Part("Main", sections)]
-                return Course(course_name, parts)
+                return Course(course_name, parts, source_file=filepath)
             return None

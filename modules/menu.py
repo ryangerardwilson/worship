@@ -5,7 +5,8 @@ from .ascii import title_ascii_art
 
 class Menu:
     def __init__(self, courses, doc_mode=False):
-        self.courses = courses
+        # self.courses = courses
+        self.courses = sorted(courses, key=lambda c: c.name.lower())
         self.title_ascii_art = title_ascii_art
         self.doc_mode = doc_mode
 
@@ -104,6 +105,7 @@ class Menu:
                                 course.name,
                                 part.sections[0].lessons,
                                 doc_mode=self.doc_mode,
+                                source_file=course.source_file
                             )
                             sequencer.run(stdscr)
                         else:
@@ -194,7 +196,8 @@ class Menu:
                             f"{course.name}: {part.name}",
                             part.sections[0].lessons,
                             doc_mode=self.doc_mode,
-                        )
+                            source_file=course.source_file
+                            )
                         sequencer.run(stdscr)
                     else:
                         self.run_section_menu(stdscr, course, part)
@@ -276,7 +279,8 @@ class Menu:
                         f"{course.name}: {part.name}: {section.name}",
                         section.lessons,
                         doc_mode=self.doc_mode,
-                    )
+                        source_file=course.source_file
+                        )
                     sequencer.run(stdscr)
                     stdscr.nodelay(True)
                     curses.curs_set(0)

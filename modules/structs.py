@@ -1,4 +1,5 @@
 # ~/Apps/rtutor/modules/structs.py
+
 class Lesson:
     def __init__(self, name, content):
         self.name = name  # Lesson name, e.g., "Lesson1"
@@ -18,7 +19,7 @@ class Part:
 
 
 class Course:
-    def __init__(self, name, parts):
+    def __init__(self, name, parts, source_file=None):
         self.name = name  # Course name, e.g., "Basic Typing"
-        self.parts = parts  # List of Part objects:w
-        
+        self.parts = parts  # List of Part objects
+        self.source_file = source_file  # Path to the original .md file

@@ -6,10 +6,11 @@ from .boom import Boom
 
 
 class LessonSequencer:
-    def __init__(self, name, lessons, doc_mode=False):
+    def __init__(self, name, lessons, doc_mode=False, source_file=None):
         self.name = name  # Sequence name (e.g., "Basic Typing")
         self.lessons = lessons  # List of Lesson objects
         self.doc_mode = doc_mode
+        self.source_file = source_file
 
     def run(self, stdscr):
         curses.start_color()
