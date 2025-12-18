@@ -5,7 +5,6 @@ from .ascii import title_ascii_art
 
 class Menu:
     def __init__(self, courses, doc_mode=False):
-        # self.courses = courses
         self.courses = sorted(courses, key=lambda c: c.name.lower())
         self.title_ascii_art = title_ascii_art
         self.doc_mode = doc_mode
@@ -26,7 +25,7 @@ class Menu:
             max_y, max_x = stdscr.getmaxyx()
             total_items = len(self.courses)
             if total_items == 0:
-                return  # nothing to do you retard
+                return
 
             title_lines = self.title_ascii_art.count("\n")
             menu_start_y = title_lines + 4
@@ -69,9 +68,7 @@ class Menu:
                             menu_start_y + i,
                             menu_x_pos,
                             text,
-                            curses.color_pair(1)
-                            if i == selected
-                            else curses.color_pair(2),
+                            curses.color_pair(1) if i == selected else curses.color_pair(2),
                         )
                         stdscr.clrtoeol()
                     except curses.error:
@@ -92,7 +89,7 @@ class Menu:
                 elif key in (curses.KEY_DOWN, ord("j")):
                     selected = (selected + 1) % total_items
                 elif key in (curses.KEY_LEFT, ord("h")):
-                    curses.flash()  # you're already at root, fuck off
+                    curses.flash()
                 elif key in (curses.KEY_RIGHT, ord("l")):
                     course = self.courses[selected]
 
@@ -105,7 +102,7 @@ class Menu:
                                 course.name,
                                 part.sections[0].lessons,
                                 doc_mode=self.doc_mode,
-                                source_file=course.source_file
+                                source_file=course.source_file,
                             )
                             sequencer.run(stdscr)
                         else:
@@ -117,7 +114,90 @@ class Menu:
                     curses.curs_set(0)
                     need_redraw = True
 
-                elif key == 27:  # ESC = quit from main
+                elif key == ord("b") and self.doc_mode:
+                    from .bookmarks import Bookmarks
+
+                    bookmarks = Bookmarks()
+                    result = bookmarks.show_menu_and_jump(stdscr, self.courses)
+                    if result:
+                        target_course_name, target_part, target_section, target_lesson = result
+
+                        found = False
+                        for course in self.courses:
+                            if course.name != target_course_name:
+                                continue
+
+                            # Case 1: Full hierarchy known — launch directly at section level
+                            if target_part and target_section:
+                                for part in course.parts:
+                                    if part.name != target_part:
+                                        continue
+                                    for section in part.sections:
+                                        if section.name != target_section:
+                                            continue
+                                        from .lesson_sequencer import LessonSequencer
+                                        sequencer = LessonSequencer(
+                                            f"{course.name}: {part.name}: {section.name}",
+                                            section.lessons,
+                                            doc_mode=True,
+                                            source_file=course.source_file
+                                        )
+                                        sequencer.target_lesson_name = target_lesson
+                                        sequencer.run(stdscr)
+                                        found = True
+                                        break
+                                    if found: break
+                                if found: break
+
+                            # Case 2: Only part known — open part menu
+                            elif target_part:
+                                for part in course.parts:
+                                    if part.name != target_part:
+                                        continue
+                                    if len(part.sections) == 1 and part.sections[0].name == "Main":
+                                        from .lesson_sequencer import LessonSequencer
+                                        sequencer = LessonSequencer(
+                                            f"{course.name}: {part.name}",
+                                            part.sections[0].lessons,
+                                            doc_mode=True,
+                                            source_file=course.source_file
+                                        )
+                                        sequencer.target_lesson_name = target_lesson
+                                        sequencer.run(stdscr)
+                                    else:
+                                        self.run_section_menu(stdscr, course, part)
+                                    found = True
+                                    break
+                                if found: break
+
+                            # Case 3: Only course — open course normally
+                            else:
+                                if len(course.parts) == 1 and course.parts[0].name == "Main":
+                                    part = course.parts[0]
+                                    if len(part.sections) == 1 and part.sections[0].name == "Main":
+                                        from .lesson_sequencer import LessonSequencer
+                                        sequencer = LessonSequencer(
+                                            course.name,
+                                            part.sections[0].lessons,
+                                            doc_mode=True,
+                                            source_file=course.source_file
+                                        )
+                                        sequencer.target_lesson_name = target_lesson
+                                        sequencer.run(stdscr)
+                                    else:
+                                        self.run_section_menu(stdscr, course, part)
+                                else:
+                                    self.run_part_menu(stdscr, course)
+                                found = True
+                                break
+
+                        # After doc mode ends, return to main menu
+                        need_redraw = True
+
+                    else:
+                        need_redraw = True
+
+                elif key == 27:  # ESC
                     stdscr.nodelay(False)
                     return
 
@@ -162,9 +242,7 @@ class Menu:
                             menu_start_y + i,
                             menu_x_pos,
                             text,
-                            curses.color_pair(1)
-                            if i == selected
-                            else curses.color_pair(2),
+                            curses.color_pair(1) if i == selected else curses.color_pair(2),
                         )
                         stdscr.clrtoeol()
                     except curses.error:
@@ -197,7 +275,7 @@ class Menu:
                             part.sections[0].lessons,
                             doc_mode=self.doc_mode,
                             source_file=course.source_file
-                            )
+                        )
                         sequencer.run(stdscr)
                     else:
                         self.run_section_menu(stdscr, course, part)
@@ -247,9 +325,7 @@ class Menu:
                             menu_start_y + i,
                             menu_x_pos,
                             text,
-                            curses.color_pair(1)
-                            if i == selected
-                            else curses.color_pair(2),
+                            curses.color_pair(1) if i == selected else curses.color_pair(2),
                         )
                         stdscr.clrtoeol()
                     except curses.error:
@@ -279,8 +355,8 @@ class Menu:
                         f"{course.name}: {part.name}: {section.name}",
                         section.lessons,
                         doc_mode=self.doc_mode,
-                        source_file=course.source_file
-                        )
+                        source_file=course.source_file,
+                    )
                     sequencer.run(stdscr)
                     stdscr.nodelay(True)
                     curses.curs_set(0)
