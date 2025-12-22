@@ -1,10 +1,10 @@
 # Psalms
 
-## Part I: Increase Our Faith
+## Part I: Psalms
 
-### Section 1: The Whole Armour of God
+### Section 1: Psalm 27
 
-#### Lesson 1: Psalm 27
+#### Lesson 1: P27
 
     [1] The LORD is my light and my salvation; whom shall I fear? the LORD is
     the strength of my life; of whom shall I be afraid?
@@ -50,7 +50,9 @@
     [14] Wait on the LORD: be of good courage, and he shall strengthen thine
     heart: wait, I say, on the LORD.
 
-#### Lesson 2: Psalm 91
+### Section 2: Psalm 91
+
+#### Lesson 1: P91
 
     [1] He that dwelleth in the secret place of the most High shall abide under
     the shadow of the Almighty.
