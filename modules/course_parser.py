@@ -41,9 +41,7 @@ class CourseParser:
             # Full hierarchy: # course, ## part, ### section, #### lesson
             parts = []
             current_part = None
-            current_part_name = None
             current_section = None
-            current_section_name = None
             current_lesson_name = None
             lesson_content = []
             in_code_block = False
@@ -60,43 +58,37 @@ class CourseParser:
 
                 if line.startswith("## "):
                     if current_lesson_name and lesson_content:
-                        current_section.lessons.append(
-                            Lesson(current_lesson_name, "\n".join(lesson_content))
-                        )
+                        content = "\n".join(lesson_content) + "\n" * 7
+                        current_section.lessons.append(Lesson(current_lesson_name, content))
                         lesson_content = []
                     if current_section:
                         current_part.sections.append(current_section)
                     if current_part:
                         parts.append(current_part)
-                    current_part_name = line[3:].strip()
-                    current_part = Part(current_part_name, [])
+                    current_part = Part(line[3:].strip(), [])
                     current_section = None
-                    current_section_name = None
                     current_lesson_name = None
                     in_code_block = False
                     continue
 
                 if line.startswith("### "):
                     if current_lesson_name and lesson_content:
-                        current_section.lessons.append(
-                            Lesson(current_lesson_name, "\n".join(lesson_content))
-                        )
+                        content = "\n".join(lesson_content) + "\n" * 7
+                        current_section.lessons.append(Lesson(current_lesson_name, content))
                         lesson_content = []
                     if current_section:
                         current_part.sections.append(current_section)
                     if not current_part:
                         return None
-                    current_section_name = line[4:].strip()
-                    current_section = Section(current_section_name, [])
+                    current_section = Section(line[4:].strip(), [])
                     current_lesson_name = None
                     in_code_block = False
                     continue
 
                 if line.startswith("#### "):
                     if current_lesson_name and lesson_content:
-                        current_section.lessons.append(
-                            Lesson(current_lesson_name, "\n".join(lesson_content))
-                        )
+                        content = "\n".join(lesson_content) + "\n" * 7
+                        current_section.lessons.append(Lesson(current_lesson_name, content))
                         lesson_content = []
                     if not current_section:
                         print(f"Error: Lesson without section in {filepath}")
@@ -105,16 +97,9 @@ class CourseParser:
                     in_code_block = False
                     continue
 
-                if current_lesson_name and (
-                    line.startswith("    ") or line.startswith("\t")
-                ):
+                if current_lesson_name and (line.startswith("    ") or line.startswith("\t")):
                     in_code_block = True
-                    if line.startswith("    "):
-                        content_line = line[4:]
-                    elif line.startswith("\t"):
-                        content_line = line[1:]
-                    else:
-                        content_line = line.lstrip()
+                    content_line = line[4:] if line.startswith("    ") else line[1:]
                     lesson_content.append(content_line.rstrip())
                     continue
 
@@ -122,18 +107,13 @@ class CourseParser:
                     lesson_content.append("")
                     continue
 
-                if (
-                    in_code_block
-                    and line.strip()
-                    and not (line.startswith("    ") or line.startswith("\t"))
-                ):
+                if in_code_block and line.strip() and not (line.startswith("    ") or line.startswith("\t")):
                     in_code_block = False
 
-            # Save the last items
+            # Final save
             if current_lesson_name and lesson_content:
-                current_section.lessons.append(
-                    Lesson(current_lesson_name, "\n".join(lesson_content))
-                )
+                content = "\n".join(lesson_content) + "\n" * 7
+                current_section.lessons.append(Lesson(current_lesson_name, content))
             if current_section:
                 current_part.sections.append(current_section)
             if current_part:
@@ -144,10 +124,9 @@ class CourseParser:
             return None
 
         elif has_parts:
-            # Mid hierarchy: # course, ## part, ### lesson (wrap lessons in "Main" section)
+            # Mid hierarchy: # course, ## part, ### lesson
             parts = []
             current_part = None
-            current_part_name = None
             current_lesson_name = None
             lesson_content = []
             in_code_block = False
@@ -164,23 +143,20 @@ class CourseParser:
 
                 if line.startswith("## "):
                     if current_lesson_name and lesson_content:
-                        current_part.sections[-1].lessons.append(
-                            Lesson(current_lesson_name, "\n".join(lesson_content))
-                        )
+                        content = "\n".join(lesson_content) + "\n" * 7
+                        current_part.sections[-1].lessons.append(Lesson(current_lesson_name, content))
                         lesson_content = []
                     if current_part:
                         parts.append(current_part)
-                    current_part_name = line[3:].strip()
-                    current_part = Part(current_part_name, [Section("Main", [])])
+                    current_part = Part(line[3:].strip(), [Section("Main", [])])
                     current_lesson_name = None
                     in_code_block = False
                     continue
 
                 if line.startswith("### "):
                     if current_lesson_name and lesson_content:
-                        current_part.sections[-1].lessons.append(
-                            Lesson(current_lesson_name, "\n".join(lesson_content))
-                        )
+                        content = "\n".join(lesson_content) + "\n" * 7
+                        current_part.sections[-1].lessons.append(Lesson(current_lesson_name, content))
                         lesson_content = []
                     if not current_part:
                         print(f"Error: Lesson without part in {filepath}")
@@ -189,16 +165,9 @@ class CourseParser:
                     in_code_block = False
                     continue
 
-                if current_lesson_name and (
-                    line.startswith("    ") or line.startswith("\t")
-                ):
+                if current_lesson_name and (line.startswith("    ") or line.startswith("\t")):
                     in_code_block = True
-                    if line.startswith("    "):
-                        content_line = line[4:]
-                    elif line.startswith("\t"):
-                        content_line = line[1:]
-                    else:
-                        content_line = line.lstrip()
+                    content_line = line[4:] if line.startswith("    ") else line[1:]
                     lesson_content.append(content_line.rstrip())
                     continue
 
@@ -206,18 +175,13 @@ class CourseParser:
                     lesson_content.append("")
                     continue
 
-                if (
-                    in_code_block
-                    and line.strip()
-                    and not (line.startswith("    ") or line.startswith("\t"))
-                ):
+                if in_code_block and line.strip() and not (line.startswith("    ") or line.startswith("\t")):
                     in_code_block = False
 
-            # Save the last lesson and part
+            # Final save
             if current_lesson_name and lesson_content:
-                current_part.sections[-1].lessons.append(
-                    Lesson(current_lesson_name, "\n".join(lesson_content))
-                )
+                content = "\n".join(lesson_content) + "\n" * 7
+                current_part.sections[-1].lessons.append(Lesson(current_lesson_name, content))
             if current_part:
                 parts.append(current_part)
 
@@ -226,7 +190,7 @@ class CourseParser:
             return None
 
         else:
-            # Flat structure: # course, ## lesson (wrap in "Main" part and "Main" section)
+            # Flat structure: # course, ## lesson
             lessons = []
             current_lesson_name = None
             lesson_content = []
@@ -244,24 +208,16 @@ class CourseParser:
 
                 if line.startswith("## "):
                     if current_lesson_name and lesson_content:
-                        lessons.append(
-                            Lesson(current_lesson_name, "\n".join(lesson_content))
-                        )
+                        content = "\n".join(lesson_content) + "\n" * 7
+                        lessons.append(Lesson(current_lesson_name, content))
                         lesson_content = []
                     current_lesson_name = line[3:].strip()
                     in_code_block = False
                     continue
 
-                if current_lesson_name and (
-                    line.startswith("    ") or line.startswith("\t")
-                ):
+                if current_lesson_name and (line.startswith("    ") or line.startswith("\t")):
                     in_code_block = True
-                    if line.startswith("    "):
-                        content_line = line[4:]
-                    elif line.startswith("\t"):
-                        content_line = line[1:]
-                    else:
-                        content_line = line.lstrip()
+                    content_line = line[4:] if line.startswith("    ") else line[1:]
                     lesson_content.append(content_line.rstrip())
                     continue
 
@@ -269,16 +225,13 @@ class CourseParser:
                     lesson_content.append("")
                     continue
 
-                if (
-                    in_code_block
-                    and line.strip()
-                    and not (line.startswith("    ") or line.startswith("\t"))
-                ):
+                if in_code_block and line.strip() and not (line.startswith("    ") or line.startswith("\t")):
                     in_code_block = False
 
-            # Save the last lesson
+            # Final save
             if current_lesson_name and lesson_content:
-                lessons.append(Lesson(current_lesson_name, "\n".join(lesson_content)))
+                content = "\n".join(lesson_content) + "\n" * 7
+                lessons.append(Lesson(current_lesson_name, content))
 
             if course_name and lessons:
                 sections = [Section("Main", lessons)]
