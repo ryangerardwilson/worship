@@ -1,5 +1,4 @@
 # ~/Apps/rtutor/modules/rote_mode.py
-
 import curses
 import sys
 from .structs import Lesson
@@ -17,7 +16,6 @@ class RoteMode:
         reps_completed = 0
         ROTE_TARGET = 10
 
-        # Preprocess lesson once
         lines = self.lesson.content.splitlines() or [""]
         total_lines = len(lines)
 
@@ -29,9 +27,7 @@ class RoteMode:
             is_skip.append(line.lstrip().startswith(("#!", "//!", "--!")))
 
         while reps_completed < ROTE_TARGET:
-            # Reset per rep
             offset = 0
-            min_lines_below = 3
             current_line = 0
             user_inputs = [[] for _ in lines]
             lesson_finished = False
@@ -40,21 +36,25 @@ class RoteMode:
 
             while rep_in_progress:
                 max_y, max_x = stdscr.getmaxyx()
-                available_height = max(0, max_y - 4)  # header 2 + footer 2
-                content_start_y = 2
+                available_height = max(0, max_y - 4)
+                content_start_y = 3
 
-                # Smart offset adjustment
+                # === Smooth, early scrolling + extra lookahead near end ===
                 if total_lines > available_height:
                     visible_top = offset
                     visible_bottom = offset + available_height - 1
-                    lines_below = total_lines - 1 - current_line
+                    current_visible_row = current_line - offset
 
-                    if lines_below < min_lines_below and current_line > visible_bottom - min_lines_below:
-                        offset = max(0, current_line - (available_height - min_lines_below - 1))
-                    elif current_line < visible_top:
-                        offset = current_line
-                    elif current_line >= visible_top + available_height:
-                        offset = current_line - available_height + 1
+                    scroll_trigger_row = int(available_height * 0.6)
+
+                    if current_visible_row > scroll_trigger_row:
+                        scroll_amount = current_visible_row - scroll_trigger_row
+                        offset += scroll_amount
+
+                    lines_below = total_lines - 1 - current_line
+                    if lines_below <= 20:
+                        desired_offset = max(0, current_line - int(available_height * 0.3))
+                        offset = max(offset, desired_offset)
 
                     offset = max(0, min(offset, total_lines - available_height))
                 else:
@@ -65,22 +65,25 @@ class RoteMode:
                 visible_range = range(start_idx, end_idx)
 
                 if need_redraw:
-                    # Title with rep count
-                    title = f"Rote Mode: {self.sequencer_name} | {self.lesson.name} | Rep {reps_completed + 1}/{ROTE_TARGET}"
+
+                    # Title on two lines
+                    line1 = self.sequencer_name
+                    line2 = f"ROTE_MODE: {self.lesson.name}"
                     try:
-                        stdscr.addstr(0, 0, title[:max_x], curses.color_pair(1))
+                        stdscr.addstr(0, 0, line1[:max_x], curses.color_pair(1) | curses.A_BOLD)
+                        stdscr.addstr(1, 0, line2[:max_x], curses.color_pair(1) | curses.A_BOLD)
                         stdscr.clrtoeol()
                     except curses.error:
                         pass
 
-                    # Clear row 1
+
+
                     try:
-                        stdscr.move(1, 0)
+                        stdscr.move(2, 0)
                         stdscr.clrtoeol()
                     except curses.error:
                         pass
 
-                    # Render visible lines
                     for local_i, global_i in enumerate(visible_range):
                         row = content_start_y + local_i
                         line = lines[global_i]
@@ -127,12 +130,21 @@ class RoteMode:
                         except:
                             pass
 
-                    # Clear leftover rows
-                    for r in range(content_start_y + (end_idx - start_idx), max_y - 2):
+                    # Preserve blank lines at end
+                    content_end_row = content_start_y + (end_idx - start_idx)
+
+                    if total_lines - end_idx <= 7:
+                        clear_start = content_end_row
+                        clear_end = content_end_row
+                    else:
+                        clear_start = content_end_row
+                        clear_end = max_y - 2
+
+                    for r in range(clear_start, clear_end):
                         try:
                             stdscr.move(r, 0)
                             stdscr.clrtoeol()
-                        except:
+                        except curses.error:
                             pass
 
                     # Stats
@@ -149,21 +161,20 @@ class RoteMode:
                     try:
                         stdscr.addstr(max_y - 2, 0, stats + scroll_info, curses.color_pair(1))
                         stdscr.clrtoeol()
-                    except:
+                    except curses.error:
                         pass
 
                     # Instructions
                     if lesson_finished:
                         instr = "Rep complete! Hit n for next rep or esc to quit rote"
                     else:
-                        instr = "Ctrl+R → restart rep | ESC → quit rote"
+                        instr = "Ctrl+R → restart rep | Alt+Enter → quit rote"
                     try:
                         stdscr.addstr(max_y - 1, 0, instr, curses.color_pair(1))
                         stdscr.clrtoeol()
-                    except:
+                    except curses.error:
                         pass
 
-                    # Cursor
                     if not lesson_finished:
                         cursor_row = content_start_y + (current_line - offset)
                         cursor_col = 0
@@ -189,7 +200,6 @@ class RoteMode:
                     stdscr.refresh()
                     need_redraw = False
 
-                # Input handling
                 changed = False
                 while True:
                     try:
@@ -198,7 +208,7 @@ class RoteMode:
                             break
                         changed = True
 
-                        if key == 3:  # Ctrl+C
+                        if key == 3:
                             sys.exit(0)
 
                         if lesson_finished:
@@ -206,14 +216,14 @@ class RoteMode:
                                 reps_completed += 1
                                 rep_in_progress = False
                                 break
-                            elif key == 27:  # ESC
+                            elif key in (ord('q'), ord('Q')):
                                 return False
                         else:
-                            if key == 18:  # Ctrl+R
+                            if key == 18:
                                 user_inputs = [[] for _ in lines]
                                 current_line = 0
                                 lesson_finished = False
-                            elif key == 27:  # ESC
+                            elif key == 27:
                                 return False
                             elif is_skip[current_line]:
                                 if key in (curses.KEY_ENTER, 10, 13):
@@ -227,7 +237,7 @@ class RoteMode:
                                     if user_inputs[current_line] == processed_lines[current_line]:
                                         if current_line < total_lines - 1:
                                             current_line += 1
-                                elif key == 9:  # Tab
+                                elif key == 9:
                                     cur_len = len(user_inputs[current_line])
                                     req_len = len(processed_lines[current_line])
                                     if cur_len < req_len:
@@ -240,7 +250,6 @@ class RoteMode:
                                         if len(user_inputs[current_line]) < len(processed_lines[current_line]):
                                             user_inputs[current_line].append(ch)
 
-                        # Check completion
                         all_done = all(is_skip[i] or user_inputs[i] == processed_lines[i] for i in range(total_lines))
                         if all_done and not lesson_finished:
                             lesson_finished = True
@@ -253,8 +262,6 @@ class RoteMode:
                 if changed:
                     need_redraw = True
 
-        # All 10 reps complete
         boom = Boom("Rote complete! Press any key to return.")
         boom.display(stdscr)
-
         return True

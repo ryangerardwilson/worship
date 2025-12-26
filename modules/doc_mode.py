@@ -147,7 +147,7 @@ class DocMode:
             total_lines = len(lines)
 
             max_y, max_x = stdscr.getmaxyx()
-            header_rows = 2
+            header_rows = 3
             footer_rows = 2
             available_height = max(0, max_y - header_rows - footer_rows)
             max_allowed_offset = max(0, total_lines - available_height)
@@ -159,17 +159,19 @@ class DocMode:
             if need_redraw:
                 stdscr.clear()
 
-                # Title
-                title = f"{self.sequencer.name} | {current_lesson.name}"
+                # Title on two lines
+                line1 = self.sequencer.name
+                line2 = f"DOC_MODE: {current_lesson.name}"
                 try:
-                    stdscr.addstr(0, 0, title[:max_x], curses.color_pair(1) | curses.A_BOLD)
+                    stdscr.addstr(0, 0, line1[:max_x], curses.color_pair(1) | curses.A_BOLD)
+                    stdscr.addstr(1, 0, line2[:max_x], curses.color_pair(1) | curses.A_BOLD)
                     stdscr.clrtoeol()
                 except curses.error:
                     pass
 
                 # Empty line
                 try:
-                    stdscr.move(1, 0)
+                    stdscr.move(2, 0)
                     stdscr.clrtoeol()
                 except curses.error:
                     pass

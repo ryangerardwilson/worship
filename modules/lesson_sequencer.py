@@ -57,7 +57,7 @@ class LessonSequencer:
             while True:
                 max_y, max_x = stdscr.getmaxyx()
                 available_height = max(0, max_y - 4)
-                content_start_y = 2
+                content_start_y = 3
 
                 # === Smooth scrolling logic ===
                 if total_lines > available_height:
@@ -85,15 +85,19 @@ class LessonSequencer:
                 visible_range = range(start_idx, end_idx)
 
                 if need_redraw:
-                    title = f"{self.name} | {lesson.name}"
+
+                    # Title on two lines
+                    line1 = self.name
+                    line2 = f"TYPE_MODE: {lesson.name}"
                     try:
-                        stdscr.addstr(0, 0, title[:max_x], curses.color_pair(1))
+                        stdscr.addstr(0, 0, line1[:max_x], curses.color_pair(1) | curses.A_BOLD)
+                        stdscr.addstr(1, 0, line2[:max_x], curses.color_pair(1) | curses.A_BOLD)
                         stdscr.clrtoeol()
                     except curses.error:
                         pass
 
                     try:
-                        stdscr.move(1, 0)
+                        stdscr.move(2, 0)
                         stdscr.clrtoeol()
                     except curses.error:
                         pass
