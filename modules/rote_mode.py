@@ -168,7 +168,7 @@ class RoteMode:
                     if lesson_finished:
                         instr = "Rep complete! Hit n for next rep or esc to quit rote"
                     else:
-                        instr = "Ctrl+R → restart rep | Alt+Enter → quit rote"
+                        instr = "Ctrl+R → restart rep | Esc → quit rote"
                     try:
                         stdscr.addstr(max_y - 1, 0, instr, curses.color_pair(1))
                         stdscr.clrtoeol()

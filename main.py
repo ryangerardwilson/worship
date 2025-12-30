@@ -1,3 +1,4 @@
+# ~/Apps/worship/main.py
 #!/usr/bin/env python3
 import curses
 import sys
@@ -8,6 +9,10 @@ from modules.doc_searcher import DocSearcher
 
 
 def main():
+    # Set ESCDELAY early, before any curses initialization
+    # 25ms gives very snappy Esc response while still allowing most Alt+key and escape sequences to work reliably
+    os.environ.setdefault('ESCDELAY', '25')
+
     # Get the actual directory of main.py, resolving any symlinks
     script_path = os.path.realpath(__file__)
     script_dir = os.path.dirname(script_path)

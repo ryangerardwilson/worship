@@ -34,6 +34,10 @@ class DocMode:
         self.last_comma_time = 0
         self.COMMA_TIMEOUT = 0.35
 
+        # For ya copy all
+        self.last_y_time = 0
+        self.YA_TIMEOUT = 0.35
+
         # For search - Vim style
         self.search_mode = False
         self.search_term = ""          # current term being typed
@@ -134,6 +138,57 @@ class DocMode:
             time.sleep(delay_sec)
         except Exception:
             pass
+
+    def show_help(self, stdscr):
+        stdscr.clear()
+        max_y, max_x = stdscr.getmaxyx()
+        help_text = [
+            "Doc Mode Help:",
+            "",
+            "Navigation:",
+            "h/l or left/right: move left/right",
+            "j/k or down/up: move down/up",
+            "Ctrl+j/k: half page down/up",
+            ",j: go to end",
+            ",k: go to top",
+            "",
+            "Lessons:",
+            "n: next lesson",
+            "p: previous lesson",
+            "r: enter rote mode",
+            "t: teleport (jump to lesson)",
+            "i: edit lesson (if source available)",
+            "b: bookmark",
+            "",
+            "Search:",
+            "/: enter search mode (type term, enter to search, esc to cancel, backspace to delete)",
+            "n/N: next/prev match",
+            "",
+            "Visual:",
+            "v: enter visual mode",
+            "In visual: hjkl to select, y to copy selection, esc to exit",
+            "",
+            "Other:",
+            "ya: copy entire lesson",
+            "?: this help",
+            "Esc: back to menu"
+        ]
+        start_y = 1
+        for i, line in enumerate(help_text):
+            x_pos = 0
+            try:
+                stdscr.addstr(start_y + i, x_pos, line, curses.color_pair(1))
+            except curses.error:
+                pass
+        footer = "Press any key to return"
+        try:
+            stdscr.addstr(max_y - 1, (max_x - len(footer)) // 2, footer, curses.color_pair(1))
+        except curses.error:
+            pass
+        stdscr.refresh()
+        stdscr.nodelay(False)
+        stdscr.getch()
+        stdscr.nodelay(True)
 
     def run(self, stdscr):
         curses.curs_set(1)
@@ -248,7 +303,7 @@ class DocMode:
                     except curses.error:
                         pass
                 else:
-                    instr = "n=next p=prev r=rote t=teleport i=edit b=mark Ctrl+j/k=½page ,j=end ,k=top /=search n/N=next/prev match v=visual hjkl=nav y=copy Alt+Enter=back"
+                    instr = "Press ? for help"
                     try:
                         stdscr.addstr(max_y - 1, 0, instr, curses.color_pair(1))
                         stdscr.clrtoeol()
@@ -406,7 +461,10 @@ class DocMode:
                     redraw_needed = True
                 # Ignore other keys in visual mode
             else:  # normal mode
-                if key in (ord('n'), ord('N')) and self.match_lines and self.last_search_term:
+                if key == ord('?'):
+                    self.show_help(stdscr)
+                    redraw_needed = True
+                elif key in (ord('n'), ord('N')) and self.match_lines and self.last_search_term:
                     direction = 1 if key == ord('n') else -1
                     self.current_match_idx = (self.current_match_idx + direction) % len(self.match_lines)
                     match_line = self.match_lines[self.current_match_idx]
@@ -489,7 +547,7 @@ class DocMode:
                         redraw_needed = True
                 elif key == 3:  # Ctrl+C
                     sys.exit(0)
-                elif key == 27:  # Esc/Alt
+                elif key == 27:  # Esc
                     return False
                 elif key == ord("b"):
                     import os
@@ -530,6 +588,17 @@ class DocMode:
                         self.cursor_col = 0
                         self.desired_display_col = 0
                     redraw_needed = True
+                elif key == ord('y'):
+                    self.last_y_time = current_time
+                elif key == ord('a'):
+                    if (current_time - self.last_y_time) < self.YA_TIMEOUT:
+                        text = current_lesson.content
+                        try:
+                            subprocess.run(['wl-copy'], input=text.encode(), check=True)
+                            self._show_msg(stdscr, "Copied entire lesson to clipboard!")
+                        except Exception:
+                            self._show_msg(stdscr, "Failed to copy (wl-copy not available?)")
+                        self.last_y_time = 0
 
             if redraw_needed:
                 need_redraw = True
