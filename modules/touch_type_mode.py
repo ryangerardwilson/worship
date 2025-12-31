@@ -1,12 +1,12 @@
+# ~/Apps/worship/modules/touch_type_mode.py
 # ~/Apps/rtutor/modules/jump_mode.py
-
 import curses
 import sys
 from .structs import Lesson
 from .boom import Boom
 
 
-class JumpMode:
+class TouchTypeMode:
     def __init__(self, sequencer_name, lessons, start_idx):
         self.sequencer_name = sequencer_name
         self.lessons = lessons
@@ -28,9 +28,7 @@ class JumpMode:
                 processed_lines.append(non_tabs)
                 is_skip.append(line.lstrip().startswith(("#!", "//!", "--!")))
 
-            # Virtual scrolling state
             offset = 0
-            min_lines_below = 3
             current_line = 0
             user_inputs = [[] for _ in lines]
             lesson_finished = False
@@ -39,21 +37,27 @@ class JumpMode:
 
             while not completed:
                 max_y, max_x = stdscr.getmaxyx()
-                available_height = max(0, max_y - 4)  # header 2 + footer 2
-                content_start_y = 2
+                header_rows = 3
+                footer_rows = 2
+                available_height = max(0, max_y - header_rows - footer_rows)
+                content_start_y = header_rows
 
-                # Smart offset adjustment
+                # === Smooth, early scrolling + extra lookahead near end ===
                 if total_lines > available_height:
                     visible_top = offset
                     visible_bottom = offset + available_height - 1
-                    lines_below = total_lines - 1 - current_line
+                    current_visible_row = current_line - offset
 
-                    if lines_below < min_lines_below and current_line > visible_bottom - min_lines_below:
-                        offset = max(0, current_line - (available_height - min_lines_below - 1))
-                    elif current_line < visible_top:
-                        offset = current_line
-                    elif current_line >= visible_top + available_height:
-                        offset = current_line - available_height + 1
+                    scroll_trigger_row = int(available_height * 0.6)
+
+                    if current_visible_row > scroll_trigger_row:
+                        scroll_amount = current_visible_row - scroll_trigger_row
+                        offset += scroll_amount
+
+                    lines_below = total_lines - 1 - current_line
+                    if lines_below <= 20:
+                        desired_offset = max(0, current_line - int(available_height * 0.3))
+                        offset = max(offset, desired_offset)
 
                     offset = max(0, min(offset, total_lines - available_height))
                 else:
@@ -64,22 +68,24 @@ class JumpMode:
                 visible_range = range(start_idx, end_idx)
 
                 if need_redraw:
-                    # Title
-                    title = f"Jump Mode: {self.sequencer_name} | {lesson.name}"
+                    # Title on two lines
+                    line1 = self.sequencer_name
+                    line2 = f"TOUCH_TYPE_MODE: {lesson.name}"
                     try:
-                        stdscr.addstr(0, 0, title[:max_x], curses.color_pair(1))
+                        stdscr.addstr(0, 0, line1[:max_x], curses.color_pair(1) | curses.A_BOLD)
+                        stdscr.addstr(1, 0, line2[:max_x], curses.color_pair(1) | curses.A_BOLD)
                         stdscr.clrtoeol()
                     except curses.error:
                         pass
 
-                    # Clear row 1
+                    # Empty line
                     try:
-                        stdscr.move(1, 0)
+                        stdscr.move(2, 0)
                         stdscr.clrtoeol()
                     except curses.error:
                         pass
 
-                    # Render visible lines only
+                    # Render visible lines
                     for local_i, global_i in enumerate(visible_range):
                         row = content_start_y + local_i
                         line = lines[global_i]
@@ -126,12 +132,20 @@ class JumpMode:
                         except:
                             pass
 
-                    # Clear leftover rows
-                    for r in range(content_start_y + (end_idx - start_idx), max_y - 2):
+                    # Preserve blank lines at end
+                    content_end_row = content_start_y + (end_idx - start_idx)
+                    if total_lines - end_idx <= 7:
+                        clear_start = content_end_row
+                        clear_end = content_end_row
+                    else:
+                        clear_start = content_end_row
+                        clear_end = max_y - footer_rows
+
+                    for r in range(clear_start, clear_end):
                         try:
                             stdscr.move(r, 0)
                             stdscr.clrtoeol()
-                        except:
+                        except curses.error:
                             pass
 
                     # Stats
@@ -148,15 +162,19 @@ class JumpMode:
                     try:
                         stdscr.addstr(max_y - 2, 0, stats + scroll_info, curses.color_pair(1))
                         stdscr.clrtoeol()
-                    except:
+                    except curses.error:
                         pass
 
-                    # Instructions
-                    instr = "Lesson complete! Hit n for next or esc to exit" if lesson_finished else "Ctrl+R → restart | ESC → quit"
+                    # Updated instructions
+                    if lesson_finished:
+                        instr = "Lesson complete! Hit n for next | ESC to return to doc mode"
+                    else:
+                        instr = "Ctrl+R → restart | ESC → return to doc mode"
+
                     try:
                         stdscr.addstr(max_y - 1, 0, instr, curses.color_pair(1))
                         stdscr.clrtoeol()
-                    except:
+                    except curses.error:
                         pass
 
                     # Cursor
@@ -195,22 +213,23 @@ class JumpMode:
                     if key == 3:  # Ctrl+C
                         sys.exit(0)
 
+                    # === NEW: Proper ESC handling ===
+                    if key == 27:  # ESC 
+                        next_key = stdscr.getch()
+                        if next_key == -1:
+                            return self.current_idx
+                        elif next_key in (curses.KEY_ENTER, 10, 13):
+                            return self.current_idx
+                        continue
+
                     if lesson_finished:
                         if key in (ord("n"), ord("N")):
                             completed = True
-                        elif key == 27:
-                            return self.current_idx
                     else:
                         if key == 18:  # Ctrl+R
                             user_inputs = [[] for _ in lines]
                             current_line = 0
                             lesson_finished = False
-                        elif key == 27:
-                            next_key = stdscr.getch()
-                            if next_key == -1:
-                                return self.current_idx
-                            else:
-                                key = next_key
                         elif is_skip[current_line]:
                             if key in (curses.KEY_ENTER, 10, 13):
                                 if current_line < total_lines - 1:
@@ -244,10 +263,10 @@ class JumpMode:
                 if changed:
                     need_redraw = True
 
-            # Next lesson
+            # Advance to next lesson after completing this one with 'n'
             self.current_idx += 1
 
-        # All done
+        # All lessons completed in touch type mode
         boom = Boom("Press any key to return to doc mode.")
         boom.display(stdscr)
         stdscr.getch()

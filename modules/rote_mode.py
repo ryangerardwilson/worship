@@ -1,3 +1,4 @@
+# ~/Apps/worship/modules/rote_mode.py
 # ~/Apps/rtutor/modules/rote_mode.py
 import curses
 import sys
@@ -36,8 +37,10 @@ class RoteMode:
 
             while rep_in_progress:
                 max_y, max_x = stdscr.getmaxyx()
-                available_height = max(0, max_y - 4)
-                content_start_y = 3
+                header_rows = 3
+                footer_rows = 2
+                available_height = max(0, max_y - header_rows - footer_rows)
+                content_start_y = header_rows
 
                 # === Smooth, early scrolling + extra lookahead near end ===
                 if total_lines > available_height:
@@ -76,8 +79,7 @@ class RoteMode:
                     except curses.error:
                         pass
 
-
-
+                    # Empty line
                     try:
                         stdscr.move(2, 0)
                         stdscr.clrtoeol()
@@ -138,7 +140,7 @@ class RoteMode:
                         clear_end = content_end_row
                     else:
                         clear_start = content_end_row
-                        clear_end = max_y - 2
+                        clear_end = max_y - footer_rows
 
                     for r in range(clear_start, clear_end):
                         try:

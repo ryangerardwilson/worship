@@ -1,4 +1,3 @@
-# ~/Apps/worship/main.py
 #!/usr/bin/env python3
 import curses
 import sys
@@ -7,6 +6,8 @@ from modules.menu import Menu
 from modules.course_parser import CourseParser
 from modules.doc_searcher import DocSearcher
 
+# Set TERM explicitly for consistent color support
+os.environ['TERM'] = 'xterm-256color'
 
 def main():
     # Set ESCDELAY early, before any curses initialization
@@ -29,8 +30,12 @@ def main():
     if searcher.try_run(sys.argv):
         return
 
-    # Otherwise, proceed with menus. -d without args -> doc-mode menus.
-    doc_mode = ("-d" in sys.argv) or ("--doc" in sys.argv)
+    # Otherwise, proceed with menus.
+    # Doc mode is now the default. -d/--doc flags are still accepted but redundant.
+    doc_mode = True
+    if ("-d" in sys.argv) or ("--doc" in sys.argv):
+        doc_mode = True  # Explicitly requested (no change needed)
+
     menu = Menu(courses, doc_mode=doc_mode)
     try:
         curses.wrapper(menu.run)

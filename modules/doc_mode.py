@@ -6,7 +6,7 @@ import re
 import subprocess
 from .structs import Lesson
 from .rote_mode import RoteMode
-from .jump_mode import JumpMode
+from .touch_type_mode import TouchTypeMode
 from .doc_editor import DocEditor
 from .bookmarks import Bookmarks
 
@@ -155,10 +155,12 @@ class DocMode:
             "Lessons:",
             "n: next lesson",
             "p: previous lesson",
-            "r: enter rote mode",
-            "t: teleport (jump to lesson)",
             "i: edit lesson (if source available)",
             "b: bookmark",
+            "",
+            "Modes:",
+            "r: Enter rote mode",
+            "t: Activate touch type mode",
             "",
             "Search:",
             "/: enter search mode (type term, enter to search, esc to cancel, backspace to delete)",
@@ -564,7 +566,7 @@ class DocMode:
                     rote.run(stdscr)
                     redraw_needed = True
                 elif key in (ord("t"), ord("T")):
-                    jump = JumpMode(self.sequencer.name, self.sequencer.lessons, self.idx)
+                    jump = TouchTypeMode(self.sequencer.name, self.sequencer.lessons, self.idx)
                     final_idx = jump.run(stdscr)
                     if final_idx is not None:
                         if final_idx >= len(self.sequencer.lessons):
