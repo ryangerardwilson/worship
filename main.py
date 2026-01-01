@@ -1,10 +1,11 @@
+# ~/Apps/rtutor/main.py
 #!/usr/bin/env python3
 import curses
 import sys
 import os
 from modules.menu import Menu
 from modules.course_parser import CourseParser
-from modules.doc_searcher import DocSearcher
+from modules.flag_handler import handle_bookmark_flags
 
 # Set TERM explicitly for consistent color support
 os.environ['TERM'] = 'xterm-256color'
@@ -25,10 +26,7 @@ def main():
         print("No valid courses found in the courses directory.")
         sys.exit(1)
 
-    # If -d/-c has args, DocSearcher runs and exits the flow here.
-    searcher = DocSearcher(courses)
-    if searcher.try_run(sys.argv):
-        return
+    handle_bookmark_flags(courses)
 
     # Otherwise, proceed with menus.
     # Doc mode is now the default. -d/--doc flags are still accepted but redundant.
@@ -41,7 +39,6 @@ def main():
         curses.wrapper(menu.run)
     except KeyboardInterrupt:
         sys.exit(0)
-
 
 if __name__ == "__main__":
     main()
