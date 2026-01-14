@@ -1,58 +1,10 @@
 # Psalms
 
-## Part I: Psalms
+## Part I: Fire
 
-### Section 1: Psalm 27
+### Section 1: Anchor
 
-#### Lesson 1: P27
-
-    [1] The LORD is my light and my salvation; whom shall I fear? the LORD is
-    the strength of my life; of whom shall I be afraid?
-
-    [2] When the wicked, even mine enemies and my foes, came upon me to eat up
-    my flesh, they stumbled and fell.
-
-    [3] Though an host should encamp against me, my heart shall not fear:
-    though war should rise against me, in this will I be confident.
-
-    [4] One thing have I desired of the LORD, that will I seek after; that I
-    may dwell in the house of the LORD all the days of my life, to behold the
-    beauty of the LORD, and to enquire in his temple.
-
-    [5] For in the time of trouble he shall hide me in his pavilion: in the
-    secret of his tabernacle shall he hide me; he shall set me up upon a rock.
-
-    [6] And now shall mine head be lifted up above mine enemies round about me:
-    therefore will I offer in his tabernacle sacrifices of joy; I will sing,
-    yea, I will sing praises unto the LORD.
-
-    [7] Hear, O LORD, when I cry with my voice: have mercy also upon me, and
-    answer me.
-
-    [8] When thou saidst, Seek ye my face; my heart said unto thee, Thy face,
-    LORD, will I seek.
-
-    [9] Hide not thy face far from me; put not thy servant away in anger: thou
-    hast been my help; leave me not, neither forsake me, O God of my salvation.
-
-    [10] When my father and my mother forsake me, then the LORD will take me
-    up.
-
-    [11] Teach me thy way, O LORD, and lead me in a plain path, because of mine
-    enemies.
-
-    [12] Deliver me not over unto the will of mine enemies: for false witnesses
-    are risen up against me, and such as breathe out cruelty.
-
-    [13] I had fainted, unless I had believed to see the goodness of the LORD
-    in the land of the living.
-
-    [14] Wait on the LORD: be of good courage, and he shall strengthen thine
-    heart: wait, I say, on the LORD.
-
-### Section 2: Psalm 91
-
-#### Lesson 1: P91
+#### Lesson 1: Psalm 91
 
     [1] He that dwelleth in the secret place of the most High shall abide under
     the shadow of the Almighty.
@@ -100,3 +52,102 @@
     trouble; I will deliver him, and honour him.
     
     [16] With long life will I satisfy him, and shew him my salvation.
+
+#### Lesson 2: Revelations 6:1-8
+
+    [6] And I saw when the Lamb opened one of the seals, and I heard, as it 
+    were the noise of thunder, one of the four beasts saying, Come and see.
+
+    [2] And I saw, and behold a white horse: and he that sat on him had a bow; 
+    and a crown was given unto him: and he went forth conquering, and to conquer.
+    
+    [3] And when he had opened the second seal, I heard the second beast say, 
+    Come and see.
+    
+    [4] And there went out another horse that was red: and power was given to 
+    him that sat thereon to take peace from the earth, and that they should kill 
+    one another: and there was given unto him a great sword.
+    
+    [5] And when he had opened the third seal, I heard the third beast say, 
+    Come and see. And I beheld, and lo a black horse; and he that sat on him had 
+    a pair of balances in his hand.
+    
+    [6] And I heard a voice in the midst of the four beasts say, A measure of 
+    wheat for a penny, and three measures of barley for a penny; and see thou 
+    hurt not the oil and the wine.
+    
+    [7] And when he had opened the fourth seal, I heard the voice of the fourth 
+    beast say, Come and see.
+    
+    [8] And I looked, and behold a pale horse: and his name that sat on him was 
+    Death, and Hell followed with him. And power was given unto them over the 
+    fourth part of the earth, to kill with sword, and with hunger, and with 
+    death, and with the beasts of the earth.
+
+
+#### Lesson 3: Revelation 12:1-6
+
+    [1] And there appeared a great wonder in heaven; a woman clothed with the 
+    sun, and the moon under her feet, and upon her head a crown of twelve stars:
+
+    [2] And she being with child cried, travailing in birth, and pained to be 
+    delivered.
+
+    [3] And there appeared another wonder in heaven; and behold a great red 
+    dragon, having seven heads and ten horns, and seven crowns upon his heads.
+
+    [4] And his tail drew the third part of the stars of heaven, and did cast 
+    them to the earth: and the dragon stood before the woman which was ready 
+    to be delivered, for to devour her child as soon as it was born.
+
+    [5] And she brought forth a man child, who was to rule all nations with a 
+    rod of iron: and her child was caught up unto God, and to his throne.
+
+    [6] And the woman fled into the wilderness, where she hath a place 
+    prepared of God, that they should feed her there a thousand two hundred and 
+    threescore days.
+
+#### Lesson 4: Revelation 21:10-14, 18-21
+
+    [10] And he carried me away in the spirit to a great and high mountain, and
+    shewed me that great city, the holy Jerusalem, descending out of heaven from God,
+    
+    [11] Having the glory of God: and her light was like unto a stone most precious, 
+    even like a jasper stone, clear as crystal;
+    
+    [12] And had a wall great and high, and had twelve gates, and at the gates 
+    twelve angels, and names written thereon, which are the names of the twelve 
+    tribes of the children of Israel:
+    
+    [13] On the east three gates; on the north three gates; on the south three gates; 
+    and on the west three gates.
+    
+    [14] And the wall of the city had twelve foundations, and in them the names of 
+    the twelve apostles of the Lamb.
+    
+    [15] And he that talked with me had a golden reed to measure the city, and the 
+    gates thereof, and the wall thereof.
+    
+    [16] And the city lieth foursquare, and the length is as large as the breadth: 
+    and he measured the city with the reed, twelve thousand furlongs. The length 
+    and the breadth and the height of it are equal.
+    
+    [17] And he measured the wall thereof, an hundred and forty and four cubits, 
+    according to the measure of a man, that is, of the angel.
+    
+    [18] And the building of the wall of it was of jasper: and the city was pure 
+    gold, like unto clear glass.
+    
+    [19] And the foundations of the wall of the city were garnished with all manner 
+    of precious stones. The first foundation was jasper; the second, sapphire; the 
+    third, a chalcedony; the fourth, an emerald;
+    
+    [20] The fifth, sardonyx; the sixth, sardius; the seventh, chrysolyte; the eighth, 
+    beryl; the ninth, a topaz; the tenth, a chrysoprasus; the eleventh, a jacinth; 
+    the twelfth, an amethyst.
+    
+    [21] And the twelve gates were twelve pearls: every several gate was of one 
+    pearl: and the street of the city was pure gold, as it were transparent glass.
+
+
+
