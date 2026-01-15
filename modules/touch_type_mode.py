@@ -14,10 +14,20 @@ class TouchTypeMode:
 
     def run(self, stdscr):
         stdscr.nodelay(True)
-        curses.curs_set(2)
+
+        def safe_curs_set(val):
+            try:
+                curses.curs_set(val)
+            except curses.error:
+                pass
+
+        safe_curs_set(2)
 
         while self.current_idx < len(self.lessons):
             lesson = self.lessons[self.current_idx]
+            stdscr.clear()
+            stdscr.refresh()
+            safe_curs_set(2)
             lines = lesson.content.splitlines() or [""]
             total_lines = len(lines)
 
@@ -132,14 +142,10 @@ class TouchTypeMode:
                         except:
                             pass
 
-                    # Preserve blank lines at end
+                    # Clear remaining lines below content to footer
                     content_end_row = content_start_y + (end_idx - start_idx)
-                    if total_lines - end_idx <= 7:
-                        clear_start = content_end_row
-                        clear_end = content_end_row
-                    else:
-                        clear_start = content_end_row
-                        clear_end = max_y - footer_rows
+                    clear_start = content_end_row
+                    clear_end = max_y - footer_rows
 
                     for r in range(clear_start, clear_end):
                         try:
@@ -159,8 +165,9 @@ class TouchTypeMode:
                         bottom = offset + (end_idx - start_idx)
                         scroll_info = f"  [{top}-{bottom}/{total_lines}]"
 
+                    footer_line = (stats + scroll_info)[:max_x]
                     try:
-                        stdscr.addstr(max_y - 2, 0, stats + scroll_info, curses.color_pair(1))
+                        stdscr.addstr(max_y - 2, 0, footer_line, curses.color_pair(1))
                         stdscr.clrtoeol()
                     except curses.error:
                         pass
@@ -172,7 +179,7 @@ class TouchTypeMode:
                         instr = "Ctrl+R → restart | ESC → return to doc mode"
 
                     try:
-                        stdscr.addstr(max_y - 1, 0, instr, curses.color_pair(1))
+                        stdscr.addstr(max_y - 1, 0, instr[:max_x], curses.color_pair(1))
                         stdscr.clrtoeol()
                     except curses.error:
                         pass
@@ -192,12 +199,13 @@ class TouchTypeMode:
                                 else:
                                     break
                         cursor_col += len(user_inputs[current_line]) - input_pos
+                        safe_curs_set(2)
                         try:
                             stdscr.move(cursor_row, cursor_col)
                         except:
                             pass
                     else:
-                        curses.curs_set(0)
+                        safe_curs_set(0)
 
                     stdscr.refresh()
                     need_redraw = False
