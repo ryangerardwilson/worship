@@ -55,7 +55,7 @@
 
 #### Lesson 2: Revelations 6:1-8
 
-    [6] And I saw when the Lamb opened one of the seals, and I heard, as it 
+    [1] And I saw when the Lamb opened one of the seals, and I heard, as it 
     were the noise of thunder, one of the four beasts saying, Come and see.
 
     [2] And I saw, and behold a white horse: and he that sat on him had a bow; 
@@ -107,7 +107,7 @@
     prepared of God, that they should feed her there a thousand two hundred and 
     threescore days.
 
-#### Lesson 4: Revelation 21:10-14, 18-21
+#### Lesson 4: Revelation 21:10-21
 
     [10] And he carried me away in the spirit to a great and high mountain, and
     shewed me that great city, the holy Jerusalem, descending out of heaven from God,
