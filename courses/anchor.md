@@ -2,7 +2,7 @@
 
 ## Part I: Fire
 
-### Section 1: Anchor
+### Section 1: Psalms
 
 #### Lesson 1: Psalm 91
 
@@ -53,7 +53,93 @@
     
     [16] With long life will I satisfy him, and shew him my salvation.
 
-#### Lesson 2: Revelations 6:1-8
+#### Lesson 2: Psalm 35
+
+    [1] Plead my cause, O Lord, with them that strive with me; fight against them 
+    that fight against me.
+
+    [2] Take hold of shield and buckler, and stand up for mine help.
+
+    [3] Draw out also the spear, and block the way against them that persecute 
+    me. Say unto my soul, "I am thy salvation."
+
+    [4] Let them be confounded and put to shame that seek after my soul; let them 
+    be turned back and brought to confusion that devise my hurt.
+
+    [5] Let them be as chaff before the wind, and let the angel of the Lord chase 
+    them.
+
+    [6] Let their way be dark and slippery, and let the angel of the Lord persecute 
+    them.
+
+    [7] For without cause they have hid their net for me in a pit, which without 
+    cause they have dug for my soul.
+
+    [8] Let destruction come upon him unawares; and let the net which he hath hidden 
+    catch himself; into that very destruction let him fall.
+
+    [9] Then my soul shall be joyful in the Lord; it shall rejoice in His salvation.
+
+    [10] All my bones shall say, "Lord, who is like unto Thee, who deliverest the 
+    poor from him that is too strong for him, yea, the poor and needy from him that 
+    would plunder him?"
+
+    [11] False witnesses rose up; they laid to my charge things that I knew not.
+
+    [12] They rewarded me evil for good, to the grieving of my soul.
+
+    [13] But as for me, when they were sick my clothing was sackcloth; I humbled my 
+    soul with fasting, and my prayer returned unto mine own bosom.
+
+    [14] I behaved myself as though he had been my friend or brother; I bowed down 
+    in heaviness, as one that mourneth for his mother.
+
+    [15] But in mine adversity they rejoiced and gathered themselves together; yea, 
+    the abjects gathered themselves together against me, and I knew it not; they tore 
+    at me and ceased not.
+
+    [16] With hypocritical mockers at feasts they gnashed their teeth against me.
+
+    [17] Lord, how long wilt Thou look on? Rescue my soul from their destructions, 
+    my precious soul from the lions.
+
+    [18] I will give Thee thanks in the great congregation; I will praise Thee among 
+    many people.
+
+    [19] Let not them that are mine enemies wrongfully rejoice over me; neither let 
+    them wink with the eye that hate me without a cause.
+
+    [20] For they speak not peace, but they devise deceitful matters against them 
+    that are quiet in the land.
+
+    [21] Yea, they opened their mouths wide against me and said, "Aha, aha! Our eyes 
+    have seen it."
+
+    [22] This Thou hast seen, O Lord; keep not silence; O Lord, be not far from me.
+
+    [23] Stir up Thyself, and awake to my judgment, even unto my cause, my God and 
+    my Lord.
+
+    [24] Judge me, O Lord my God, according to Thy righteousness; and let them not 
+    rejoice over me.
+
+    [25] Let them not say in their hearts, “Ah, so would we have it!” Let them not 
+    say, “We have swallowed him up.”
+
+    [26] Let them be ashamed and brought to confusion together that rejoice at my 
+    hurt; let them be clothed with shame and dishonor that magnify themselves 
+    against me.
+
+    [27] Let them shout for joy and be glad that favor my righteous cause; yea, 
+    let them say continually, "Let the Lord be magnified who hath pleasure in the 
+    prosperity of His servant."
+
+    [28] And my tongue shall speak of Thy righteousness and of Thy praise all the 
+    day long.
+
+### Section 2: Revelations
+
+#### Lesson 1: Revelations 6:1-8
 
     [1] And I saw when the Lamb opened one of the seals, and I heard, as it 
     were the noise of thunder, one of the four beasts saying, Come and see.
@@ -84,7 +170,7 @@
     fourth part of the earth, to kill with sword, and with hunger, and with 
     death, and with the beasts of the earth.
 
-#### Lesson 3: Revelation 12:1-6
+#### Lesson 2: Revelation 12:1-6
 
     [1] And there appeared a great wonder in heaven; a woman clothed with the 
     sun, and the moon under her feet, and upon her head a crown of twelve stars:
@@ -106,7 +192,7 @@
     prepared of God, that they should feed her there a thousand two hundred and 
     threescore days.
 
-#### Lesson 4: Revelation 21:10-21
+#### Lesson 3: Revelation 21:10-21
 
     [10] And he carried me away in the spirit to a great and high mountain, and
     shewed me that great city, the holy Jerusalem, descending out of heaven from God,
