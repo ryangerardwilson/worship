@@ -123,8 +123,8 @@
     [24] Judge me, O Lord my God, according to Thy righteousness; and let them not 
     rejoice over me.
 
-    [25] Let them not say in their hearts, “Ah, so would we have it!” Let them not 
-    say, “We have swallowed him up.”
+    [25] Let them not say in their hearts, "Ah, so would we have it!" Let them not 
+    say, "We have swallowed him up."
 
     [26] Let them be ashamed and brought to confusion together that rejoice at my 
     hurt; let them be clothed with shame and dishonor that magnify themselves 
