@@ -93,6 +93,11 @@ class Menu:
                     selected = (selected + 1) % total_items
                 elif key in (curses.KEY_LEFT, ord("h")):
                     curses.flash()
+                elif is_quit_request(key):
+                    stdscr.nodelay(False)
+                    if key in (ord("q"), ord("Q")):
+                        raise SystemExit
+                    return
                 elif key in (curses.KEY_RIGHT, ord("l")):
                     course = self.courses[selected]
 
@@ -287,7 +292,12 @@ class Menu:
                     selected = (selected - 1) % total_items
                 elif key in (curses.KEY_DOWN, ord("j")):
                     selected = (selected + 1) % total_items
-                elif key in (curses.KEY_LEFT, ord("h")) or is_quit_request(key):
+                elif key in (curses.KEY_LEFT, ord("h")):
+                    return
+                elif is_quit_request(key):
+                    stdscr.nodelay(False)
+                    if key in (ord("q"), ord("Q")):
+                        raise SystemExit
                     return
                 elif key in (curses.KEY_RIGHT, ord("l")):
                     part = course.parts[selected]
@@ -372,7 +382,12 @@ class Menu:
                     selected = (selected - 1) % total_items
                 elif key in (curses.KEY_DOWN, ord("j")):
                     selected = (selected + 1) % total_items
-                elif key in (curses.KEY_LEFT, ord("h")) or is_quit_request(key):
+                elif key in (curses.KEY_LEFT, ord("h")):
+                    return
+                elif is_quit_request(key):
+                    stdscr.nodelay(False)
+                    if key in (ord("q"), ord("Q")):
+                        raise SystemExit
                     return
                 elif key in (curses.KEY_RIGHT, ord("l")):
                     section = part.sections[selected]

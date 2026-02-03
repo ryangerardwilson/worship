@@ -199,11 +199,10 @@ class LessonSequencer:
                     except curses.error:
                         pass
 
-                    instr = (
-                        "Lesson complete! Hit l for next or Esc/Q to exit"
-                        if lesson_finished
-                        else "Ctrl+R → restart | Esc/Q → quit"
-                    )
+                    if lesson_finished:
+                        instr = "Lesson complete! Hit l for next | Esc → back | Q → quit app"
+                    else:
+                        instr = "Ctrl+R → restart | Esc → quit"
                     try:
                         stdscr.addstr(max_y - 1, 0, instr, curses.color_pair(1))
                         stdscr.clrtoeol()
@@ -245,6 +244,8 @@ class LessonSequencer:
                     changed = True
 
                     if is_quit_request(key, typing_active=not lesson_finished):
+                        if key in (ord("q"), ord("Q")) and lesson_finished:
+                            raise SystemExit
                         return False
 
                     if key == 3:  # Ctrl+C

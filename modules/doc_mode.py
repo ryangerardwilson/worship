@@ -8,6 +8,7 @@ from .rote_mode import RoteMode
 from .touch_type_mode import TouchTypeMode
 from .doc_editor import DocEditor
 from .bookmarks import Bookmarks
+from .key_utils import is_quit_request
 
 
 class DocMode:
@@ -186,7 +187,8 @@ class DocMode:
             "Other:",
             "ya: copy entire lesson",
             "?: this help",
-            "Esc/Q: back to menu",
+            "Esc: back to menu",
+            "Q: quit app",
         ]
         start_y = 1
         for i, line in enumerate(help_text):
@@ -261,20 +263,25 @@ class DocMode:
                     display_pos = 0
                     for char_idx, char in enumerate(line):
                         is_selected = False
-                        if self.mode == "visual" and self.visual_start_line is not None:
+                        visual_start_col = self.visual_start_col
+                        if (
+                            self.mode == "visual"
+                            and self.visual_start_line is not None
+                            and visual_start_col is not None
+                        ):
                             start_l = min(self.visual_start_line, self.cursor_line)
                             end_l = max(self.visual_start_line, self.cursor_line)
                             start_c = (
-                                min(self.visual_start_col, self.cursor_col)
+                                min(visual_start_col, self.cursor_col)
                                 if start_l == end_l
                                 else (
-                                    self.visual_start_col
+                                    visual_start_col
                                     if row_idx == self.visual_start_line
                                     else 0
                                 )
                             )
                             end_c = (
-                                max(self.visual_start_col, self.cursor_col)
+                                max(visual_start_col, self.cursor_col)
                                 if start_l == end_l
                                 else (
                                     self.cursor_col
@@ -390,7 +397,9 @@ class DocMode:
             if key == -1:
                 continue
 
-            if not self.search_mode and key in (ord("q"), ord("Q")):
+            if not self.search_mode and is_quit_request(key):
+                if key in (ord("q"), ord("Q")):
+                    raise SystemExit
                 return False
 
             current_time = time.time()

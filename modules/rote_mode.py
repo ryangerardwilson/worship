@@ -187,7 +187,7 @@ class RoteMode:
 
                     # Instructions
                     if lesson_finished:
-                        instr = "Rep complete! Hit n for next rep or Esc/Q to quit"
+                        instr = "Rep complete! Hit n for next rep | Esc → quit rote | Q → quit app"
                     else:
                         instr = "Ctrl+R → restart rep | Esc → quit rote"
                     try:
@@ -238,7 +238,7 @@ class RoteMode:
                                 rep_in_progress = False
                                 break
                             elif key in (ord("q"), ord("Q")):
-                                return False
+                                raise SystemExit
                         else:
                             if key == 18:
                                 user_inputs = [[] for _ in lines]

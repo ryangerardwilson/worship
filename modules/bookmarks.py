@@ -2,6 +2,7 @@
 import os
 from pathlib import Path
 import curses
+from .key_utils import is_quit_request
 
 
 class Bookmarks:
@@ -171,7 +172,7 @@ class Bookmarks:
                     except:
                         pass
 
-                instr = "j/k navigate | Enter/l go | dd delete | esc back"
+                instr = "j/k navigate | Enter/l go | dd delete | Esc back | Q quit"
                 try:
                     stdscr.addstr(max_y - 1, 0, instr, curses.color_pair(1))
                 except:
@@ -183,6 +184,11 @@ class Bookmarks:
             key = stdscr.getch()
             if key == -1:
                 continue
+
+            if is_quit_request(key):
+                if key in (ord("q"), ord("Q")):
+                    raise SystemExit
+                return None
 
             current_time = curses.getsyx()[
                 1

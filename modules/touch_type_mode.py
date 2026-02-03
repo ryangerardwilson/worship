@@ -192,9 +192,9 @@ class TouchTypeMode:
 
                     # Updated instructions
                     if lesson_finished:
-                        instr = "Lesson complete! Hit n for next | Esc/Q to return"
+                        instr = "Lesson complete! Hit n for next | Esc → return | Q → quit app"
                     else:
-                        instr = "Ctrl+R → restart | Esc/Q → return"
+                        instr = "Ctrl+R → restart | Esc → return"
 
                     try:
                         stdscr.addstr(max_y - 1, 0, instr[:max_x], curses.color_pair(1))
@@ -252,7 +252,7 @@ class TouchTypeMode:
                         if key in (ord("n"), ord("N")):
                             completed = True
                         elif key in (ord("q"), ord("Q")):
-                            return self.current_idx
+                            raise SystemExit
                     else:
                         if key == 18:  # Ctrl+R
                             user_inputs = [[] for _ in lines]
