@@ -4,7 +4,6 @@ import sys
 import time
 import re
 import subprocess
-from .structs import Lesson
 from .rote_mode import RoteMode
 from .touch_type_mode import TouchTypeMode
 from .doc_editor import DocEditor
@@ -19,12 +18,12 @@ class DocMode:
         self.cursor_line = 0
         self.cursor_col = 0
         self.desired_display_col = 0
-        self.mode = 'normal'
+        self.mode = "normal"
         self.visual_start_line = None
         self.visual_start_col = None
         self.bookmarks = Bookmarks()
 
-        if hasattr(sequencer, 'target_lesson_name'):
+        if hasattr(sequencer, "target_lesson_name"):
             for i, lesson in enumerate(sequencer.lessons):
                 if lesson.name == sequencer.target_lesson_name:
                     self.idx = i
@@ -40,16 +39,18 @@ class DocMode:
 
         # For search - Vim style
         self.search_mode = False
-        self.search_term = ""          # current term being typed
-        self.last_search_term = ""     # last successful search term
-        self.match_lines = []          # list of line indices that match the last successful term
-        self.current_match_idx = -1    # index in match_lines of currently highlighted match
+        self.search_term = ""  # current term being typed
+        self.last_search_term = ""  # last successful search term
+        self.match_lines = []  # list of line indices that match the last successful term
+        self.current_match_idx = (
+            -1
+        )  # index in match_lines of currently highlighted match
         self.search_direction_forward = True  # True = n goes forward, False = backward
 
     def get_display_col(self, line, char_idx):
         col = 0
         for i in range(min(char_idx, len(line))):
-            if line[i] == '\t':
+            if line[i] == "\t":
                 col += 4
             else:
                 col += 1
@@ -63,7 +64,7 @@ class DocMode:
             if display > self.desired_display_col:
                 break
             col = i
-            if line[i] == '\t':
+            if line[i] == "\t":
                 display += 4
             else:
                 display += 1
@@ -78,7 +79,9 @@ class DocMode:
         elif self.cursor_line > 0:
             self.cursor_line -= 1
             self.cursor_col = len(lines[self.cursor_line])
-        self.desired_display_col = self.get_display_col(lines[self.cursor_line], self.cursor_col)
+        self.desired_display_col = self.get_display_col(
+            lines[self.cursor_line], self.cursor_col
+        )
 
     def move_right(self, lines, total_lines):
         line_len = len(lines[self.cursor_line])
@@ -87,7 +90,9 @@ class DocMode:
         elif self.cursor_line < total_lines - 1:
             self.cursor_line += 1
             self.cursor_col = 0
-        self.desired_display_col = self.get_display_col(lines[self.cursor_line], self.cursor_col)
+        self.desired_display_col = self.get_display_col(
+            lines[self.cursor_line], self.cursor_col
+        )
 
     def move_down(self, lines, total_lines):
         if self.cursor_line < total_lines - 1:
@@ -113,8 +118,16 @@ class DocMode:
             return ""
         start_l = min(self.visual_start_line, self.cursor_line)
         end_l = max(self.visual_start_line, self.cursor_line)
-        start_c = self.visual_start_col if self.visual_start_line <= self.cursor_line else self.cursor_col
-        end_c = self.cursor_col if self.visual_start_line <= self.cursor_line else self.visual_start_col
+        start_c = (
+            self.visual_start_col
+            if self.visual_start_line <= self.cursor_line
+            else self.cursor_col
+        )
+        end_c = (
+            self.cursor_col
+            if self.visual_start_line <= self.cursor_line
+            else self.visual_start_col
+        )
         selected = []
         for l in range(start_l, end_l + 1):
             line = lines[l]
@@ -127,7 +140,7 @@ class DocMode:
             else:
                 frag = line
             selected.append(frag)
-        return '\n'.join(selected)
+        return "\n".join(selected)
 
     def _show_msg(self, stdscr, msg, delay_sec=0.8):
         max_y, max_x = stdscr.getmaxyx()
@@ -173,7 +186,7 @@ class DocMode:
             "Other:",
             "ya: copy entire lesson",
             "?: this help",
-            "Esc: back to menu"
+            "Esc/Q: back to menu",
         ]
         start_y = 1
         for i, line in enumerate(help_text):
@@ -184,7 +197,9 @@ class DocMode:
                 pass
         footer = "Press any key to return"
         try:
-            stdscr.addstr(max_y - 1, (max_x - len(footer)) // 2, footer, curses.color_pair(1))
+            stdscr.addstr(
+                max_y - 1, (max_x - len(footer)) // 2, footer, curses.color_pair(1)
+            )
         except curses.error:
             pass
         stdscr.refresh()
@@ -220,8 +235,12 @@ class DocMode:
                 line1 = self.sequencer.name
                 line2 = f"DOC_MODE: {current_lesson.name}"
                 try:
-                    stdscr.addstr(0, 0, line1[:max_x], curses.color_pair(1) | curses.A_BOLD)
-                    stdscr.addstr(1, 0, line2[:max_x], curses.color_pair(1) | curses.A_BOLD)
+                    stdscr.addstr(
+                        0, 0, line1[:max_x], curses.color_pair(1) | curses.A_BOLD
+                    )
+                    stdscr.addstr(
+                        1, 0, line2[:max_x], curses.color_pair(1) | curses.A_BOLD
+                    )
                     stdscr.clrtoeol()
                 except curses.error:
                     pass
@@ -242,21 +261,49 @@ class DocMode:
                     display_pos = 0
                     for char_idx, char in enumerate(line):
                         is_selected = False
-                        if self.mode == 'visual' and self.visual_start_line is not None:
+                        if self.mode == "visual" and self.visual_start_line is not None:
                             start_l = min(self.visual_start_line, self.cursor_line)
                             end_l = max(self.visual_start_line, self.cursor_line)
-                            start_c = min(self.visual_start_col, self.cursor_col) if start_l == end_l else (self.visual_start_col if row_idx == self.visual_start_line else 0)
-                            end_c = max(self.visual_start_col, self.cursor_col) if start_l == end_l else (self.cursor_col if row_idx == self.cursor_line else len(line))
+                            start_c = (
+                                min(self.visual_start_col, self.cursor_col)
+                                if start_l == end_l
+                                else (
+                                    self.visual_start_col
+                                    if row_idx == self.visual_start_line
+                                    else 0
+                                )
+                            )
+                            end_c = (
+                                max(self.visual_start_col, self.cursor_col)
+                                if start_l == end_l
+                                else (
+                                    self.cursor_col
+                                    if row_idx == self.cursor_line
+                                    else len(line)
+                                )
+                            )
                             if start_l <= row_idx <= end_l:
-                                if start_l < row_idx < end_l or (start_l == row_idx and char_idx >= start_c) or (end_l == row_idx and char_idx < end_c) or (start_l == end_l and start_c <= char_idx < end_c):
+                                if (
+                                    start_l < row_idx < end_l
+                                    or (start_l == row_idx and char_idx >= start_c)
+                                    or (end_l == row_idx and char_idx < end_c)
+                                    or (
+                                        start_l == end_l and start_c <= char_idx < end_c
+                                    )
+                                ):
                                     is_selected = True
                         attr = curses.A_REVERSE if is_selected else 0
-                        if char == '\t':
+                        if char == "\t":
                             for _ in range(4):
                                 if display_pos >= max_x:
                                     break
                                 try:
-                                    stdscr.addch(row, display_pos, ' ', curses.color_pair(1) | attr)
+                                    stdscr.addch(
+                                        row,
+                                        display_pos,
+                                        " ",
+                                        curses.color_pair(1) | attr,
+                                    )
                                 except curses.error:
                                     pass
                                 display_pos += 1
@@ -264,7 +311,9 @@ class DocMode:
                             if display_pos >= max_x:
                                 break
                             try:
-                                stdscr.addch(row, display_pos, char, curses.color_pair(1) | attr)
+                                stdscr.addch(
+                                    row, display_pos, char, curses.color_pair(1) | attr
+                                )
                             except curses.error:
                                 pass
                             display_pos += 1
@@ -275,7 +324,9 @@ class DocMode:
                         pass
 
                 # Clear below content
-                for row in range(header_rows + (end_line - start_line), max_y - footer_rows):
+                for row in range(
+                    header_rows + (end_line - start_line), max_y - footer_rows
+                ):
                     try:
                         stdscr.move(row, 0)
                         stdscr.clrtoeol()
@@ -291,7 +342,9 @@ class DocMode:
                     scroll_info = f"  [{top}-{bottom}/{total_lines}]"
 
                 try:
-                    stdscr.addstr(max_y - 2, 0, counter + scroll_info, curses.color_pair(1))
+                    stdscr.addstr(
+                        max_y - 2, 0, counter + scroll_info, curses.color_pair(1)
+                    )
                     stdscr.clrtoeol()
                 except curses.error:
                     pass
@@ -300,7 +353,9 @@ class DocMode:
                 if self.search_mode:
                     prompt = f"/{self.search_term}"
                     try:
-                        stdscr.addstr(max_y - 1, 0, prompt[:max_x], curses.color_pair(1))
+                        stdscr.addstr(
+                            max_y - 1, 0, prompt[:max_x], curses.color_pair(1)
+                        )
                         stdscr.clrtoeol()
                     except curses.error:
                         pass
@@ -315,8 +370,14 @@ class DocMode:
                 # Set cursor position
                 if not self.search_mode:
                     cursor_row = header_rows + (self.cursor_line - self.offset)
-                    cursor_display_col = self.get_display_col(lines[self.cursor_line], self.cursor_col)
-                    if cursor_row >= header_rows and cursor_row < max_y - footer_rows and cursor_display_col < max_x:
+                    cursor_display_col = self.get_display_col(
+                        lines[self.cursor_line], self.cursor_col
+                    )
+                    if (
+                        cursor_row >= header_rows
+                        and cursor_row < max_y - footer_rows
+                        and cursor_display_col < max_x
+                    ):
                         stdscr.move(cursor_row, cursor_display_col)
                     curses.curs_set(1)
                 else:
@@ -329,10 +390,13 @@ class DocMode:
             if key == -1:
                 continue
 
+            if not self.search_mode and key in (ord("q"), ord("Q")):
+                return False
+
             current_time = time.time()
 
             # === ENTER / EXIT SEARCH MODE ===
-            if key == ord('/'):
+            if key == ord("/"):
                 if self.search_mode:
                     self.search_mode = False
                     curses.curs_set(1)
@@ -348,7 +412,7 @@ class DocMode:
 
             # === KEYS IN SEARCH MODE ===
             if self.search_mode:
-                if key in (curses.KEY_ENTER, ord('\n'), ord('\r'), 10, 13):
+                if key in (curses.KEY_ENTER, ord("\n"), ord("\r"), 10, 13):
                     term = self.search_term.strip()
 
                     if not term:
@@ -360,7 +424,9 @@ class DocMode:
 
                     if self.last_search_term != term:
                         pattern = re.compile(re.escape(term), re.IGNORECASE)
-                        self.match_lines = [i for i, line in enumerate(lines) if pattern.search(line)]
+                        self.match_lines = [
+                            i for i, line in enumerate(lines) if pattern.search(line)
+                        ]
                         self.last_search_term = term
                         self.current_match_idx = -1
 
@@ -374,7 +440,9 @@ class DocMode:
 
                     # Advance forward
                     self.search_direction_forward = True
-                    self.current_match_idx = (self.current_match_idx + 1) % len(self.match_lines)
+                    self.current_match_idx = (self.current_match_idx + 1) % len(
+                        self.match_lines
+                    )
                     match_line = self.match_lines[self.current_match_idx]
 
                     # Place match at the very top of the screen
@@ -388,7 +456,9 @@ class DocMode:
                     else:
                         self.cursor_col = 0
                     self.cursor_line = match_line
-                    self.desired_display_col = self.get_display_col(lines[match_line], self.cursor_col)
+                    self.desired_display_col = self.get_display_col(
+                        lines[match_line], self.cursor_col
+                    )
                     self.adjust_offset(total_lines, available_height)
 
                     need_redraw = True
@@ -418,27 +488,29 @@ class DocMode:
             # === NORMAL AND VISUAL MODE KEYS ===
             redraw_needed = False
 
-            if self.mode == 'visual':
-                if key == ord('y'):
+            if self.mode == "visual":
+                if key == ord("y"):
                     text = self.get_selected_text(lines)
                     try:
-                        subprocess.run(['wl-copy'], input=text.encode(), check=True)
+                        subprocess.run(["wl-copy"], input=text.encode(), check=True)
                         self._show_msg(stdscr, "Copied to clipboard!")
                     except Exception:
-                        self._show_msg(stdscr, "Failed to copy (wl-copy not available?)")
-                    self.mode = 'normal'
+                        self._show_msg(
+                            stdscr, "Failed to copy (wl-copy not available?)"
+                        )
+                    self.mode = "normal"
                     self.visual_start_line = None
                     self.visual_start_col = None
                     redraw_needed = True
-                elif key == ord('h') or key == curses.KEY_LEFT:
+                elif key == ord("h") or key == curses.KEY_LEFT:
                     self.move_left(lines, total_lines)
                     self.adjust_offset(total_lines, available_height)
                     redraw_needed = True
-                elif key == ord('l') or key == curses.KEY_RIGHT:
+                elif key == ord("l") or key == curses.KEY_RIGHT:
                     self.move_right(lines, total_lines)
                     self.adjust_offset(total_lines, available_height)
                     redraw_needed = True
-                elif key == ord('j') or key == curses.KEY_DOWN:
+                elif key == ord("j") or key == curses.KEY_DOWN:
                     if (current_time - self.last_comma_time) < self.COMMA_TIMEOUT:
                         self.cursor_line = total_lines - 1
                         self.cursor_col = 0
@@ -447,7 +519,7 @@ class DocMode:
                         self.move_down(lines, total_lines)
                     self.adjust_offset(total_lines, available_height)
                     redraw_needed = True
-                elif key == ord('k') or key == curses.KEY_UP:
+                elif key == ord("k") or key == curses.KEY_UP:
                     if (current_time - self.last_comma_time) < self.COMMA_TIMEOUT:
                         self.cursor_line = 0
                         self.cursor_col = 0
@@ -457,45 +529,55 @@ class DocMode:
                     self.adjust_offset(total_lines, available_height)
                     redraw_needed = True
                 elif key == 27:  # ESC
-                    self.mode = 'normal'
+                    self.mode = "normal"
                     self.visual_start_line = None
                     self.visual_start_col = None
                     redraw_needed = True
                 # Ignore other keys in visual mode
             else:  # normal mode
-                if key == ord('?'):
+                if key == ord("?"):
                     self.show_help(stdscr)
                     redraw_needed = True
-                elif key in (ord('n'), ord('N')) and self.match_lines and self.last_search_term:
-                    direction = 1 if key == ord('n') else -1
-                    self.current_match_idx = (self.current_match_idx + direction) % len(self.match_lines)
+                elif (
+                    key in (ord("n"), ord("N"))
+                    and self.match_lines
+                    and self.last_search_term
+                ):
+                    direction = 1 if key == ord("n") else -1
+                    self.current_match_idx = (self.current_match_idx + direction) % len(
+                        self.match_lines
+                    )
                     match_line = self.match_lines[self.current_match_idx]
                     self.offset = max(0, match_line)
-                    pattern = re.compile(re.escape(self.last_search_term), re.IGNORECASE)
+                    pattern = re.compile(
+                        re.escape(self.last_search_term), re.IGNORECASE
+                    )
                     match = pattern.search(lines[match_line])
                     if match:
                         self.cursor_col = match.start()
                     else:
                         self.cursor_col = 0
                     self.cursor_line = match_line
-                    self.desired_display_col = self.get_display_col(lines[match_line], self.cursor_col)
+                    self.desired_display_col = self.get_display_col(
+                        lines[match_line], self.cursor_col
+                    )
                     self.adjust_offset(total_lines, available_height)
                     redraw_needed = True
                     continue
-                if key == ord('v'):
-                    self.mode = 'visual'
+                if key == ord("v"):
+                    self.mode = "visual"
                     self.visual_start_line = self.cursor_line
                     self.visual_start_col = self.cursor_col
                     redraw_needed = True
-                elif key == ord('h') or key == curses.KEY_LEFT:
+                elif key == ord("h") or key == curses.KEY_LEFT:
                     self.move_left(lines, total_lines)
                     self.adjust_offset(total_lines, available_height)
                     redraw_needed = True
-                elif key == ord('l') or key == curses.KEY_RIGHT:
+                elif key == ord("l") or key == curses.KEY_RIGHT:
                     self.move_right(lines, total_lines)
                     self.adjust_offset(total_lines, available_height)
                     redraw_needed = True
-                elif key == ord('j') or key == curses.KEY_DOWN:
+                elif key == ord("j") or key == curses.KEY_DOWN:
                     if (current_time - self.last_comma_time) < self.COMMA_TIMEOUT:
                         self.cursor_line = total_lines - 1
                         self.cursor_col = 0
@@ -504,7 +586,7 @@ class DocMode:
                         self.move_down(lines, total_lines)
                     self.adjust_offset(total_lines, available_height)
                     redraw_needed = True
-                elif key == ord('k') or key == curses.KEY_UP:
+                elif key == ord("k") or key == curses.KEY_UP:
                     if (current_time - self.last_comma_time) < self.COMMA_TIMEOUT:
                         self.cursor_line = 0
                         self.cursor_col = 0
@@ -525,9 +607,9 @@ class DocMode:
                         self.move_up(lines, total_lines)
                     self.adjust_offset(total_lines, available_height)
                     redraw_needed = True
-                elif key == ord(','):
+                elif key == ord(","):
                     self.last_comma_time = current_time
-                elif key == ord('n'):
+                elif key == ord("n"):
                     if self.idx < len(self.sequencer.lessons) - 1:
                         self.idx += 1
                         self.offset = 0
@@ -537,7 +619,7 @@ class DocMode:
                         self.match_lines = []
                         self.last_search_term = ""
                         redraw_needed = True
-                elif key == ord('p'):
+                elif key == ord("p"):
                     if self.idx > 0:
                         self.idx -= 1
                         self.offset = 0
@@ -553,12 +635,18 @@ class DocMode:
                     return False
                 elif key == ord("b"):
                     import os
-                    script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+                    script_dir = os.path.dirname(
+                        os.path.dirname(os.path.abspath(__file__))
+                    )
                     courses_dir = os.path.join(script_dir, "courses")
                     from modules.course_parser import CourseParser
+
                     parser = CourseParser(courses_dir)
                     all_courses = parser.parse_courses()
-                    self.bookmarks.add(all_courses, self.sequencer.name, current_lesson.name)
+                    self.bookmarks.add(
+                        all_courses, self.sequencer.name, current_lesson.name
+                    )
                     self._show_msg(stdscr, "Bookmarked!")
                     redraw_needed = True
                 elif key in (ord("r"), ord("R")):
@@ -566,7 +654,9 @@ class DocMode:
                     rote.run(stdscr)
                     redraw_needed = True
                 elif key in (ord("t"), ord("T")):
-                    jump = TouchTypeMode(self.sequencer.name, self.sequencer.lessons, self.idx)
+                    jump = TouchTypeMode(
+                        self.sequencer.name, self.sequencer.lessons, self.idx
+                    )
                     final_idx = jump.run(stdscr)
                     if final_idx is not None:
                         if final_idx >= len(self.sequencer.lessons):
@@ -590,16 +680,18 @@ class DocMode:
                         self.cursor_col = 0
                         self.desired_display_col = 0
                     redraw_needed = True
-                elif key == ord('y'):
+                elif key == ord("y"):
                     self.last_y_time = current_time
-                elif key == ord('a'):
+                elif key == ord("a"):
                     if (current_time - self.last_y_time) < self.YA_TIMEOUT:
                         text = current_lesson.content
                         try:
-                            subprocess.run(['wl-copy'], input=text.encode(), check=True)
+                            subprocess.run(["wl-copy"], input=text.encode(), check=True)
                             self._show_msg(stdscr, "Copied entire lesson to clipboard!")
                         except Exception:
-                            self._show_msg(stdscr, "Failed to copy (wl-copy not available?)")
+                            self._show_msg(
+                                stdscr, "Failed to copy (wl-copy not available?)"
+                            )
                         self.last_y_time = 0
 
             if redraw_needed:

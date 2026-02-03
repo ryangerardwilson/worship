@@ -4,6 +4,7 @@ import curses
 from .bookmarks import Bookmarks
 from .lesson_sequencer import LessonSequencer
 
+
 def handle_bookmark_flags(courses):
     flags = ["-b", "--bookmark"]
     idx = -1
@@ -43,7 +44,9 @@ def handle_bookmark_flags(courses):
                 if not part:
                     print("Part not found.")
                     sys.exit(1)
-                section = next((s for s in part.sections if s.name == section_name), None)
+                section = next(
+                    (s for s in part.sections if s.name == section_name), None
+                )
                 if not section:
                     print("Section not found.")
                     sys.exit(1)
@@ -65,13 +68,17 @@ def handle_bookmark_flags(courses):
                         lessons.extend(s.lessons)
                 seq_name = course_name
 
-            target_idx = next((i for i, l in enumerate(lessons) if l.name == lesson_name), None)
+            target_idx = next(
+                (i for i, l in enumerate(lessons) if l.name == lesson_name), None
+            )
             if target_idx is None:
                 print("Lesson not found.")
                 sys.exit(1)
 
             def _run_bookmark(stdscr):
-                sequencer = LessonSequencer(seq_name, lessons, doc_mode=True, source_file=course.source_file)
+                sequencer = LessonSequencer(
+                    seq_name, lessons, doc_mode=True, source_file=course.source_file
+                )
                 sequencer.target_lesson_name = lesson_name
                 sequencer.run(stdscr)
 

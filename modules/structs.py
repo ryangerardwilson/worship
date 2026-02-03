@@ -1,5 +1,6 @@
 # ~/Apps/rtutor/modules/structs.py
 
+
 class Lesson:
     def __init__(self, name, content):
         self.name = name  # Lesson name, e.g., "Lesson1"

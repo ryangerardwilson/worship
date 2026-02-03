@@ -1,6 +1,7 @@
 # ~/Apps/rtutor/modules/menu.py
 import curses
 from .ascii import title_ascii_art
+from .key_utils import is_quit_request
 
 
 class Menu:
@@ -68,7 +69,9 @@ class Menu:
                             menu_start_y + i,
                             menu_x_pos,
                             text,
-                            curses.color_pair(1) if i == selected else curses.color_pair(2),
+                            curses.color_pair(1)
+                            if i == selected
+                            else curses.color_pair(2),
                         )
                         stdscr.clrtoeol()
                     except curses.error:
@@ -120,7 +123,12 @@ class Menu:
                     bookmarks = Bookmarks()
                     result = bookmarks.show_menu_and_jump(stdscr, self.courses)
                     if result:
-                        target_course_name, target_part, target_section, target_lesson = result
+                        (
+                            target_course_name,
+                            target_part,
+                            target_section,
+                            target_lesson,
+                        ) = result
 
                         found = False
                         for course in self.courses:
@@ -136,31 +144,38 @@ class Menu:
                                         if section.name != target_section:
                                             continue
                                         from .lesson_sequencer import LessonSequencer
+
                                         sequencer = LessonSequencer(
                                             f"{course.name}: {part.name}: {section.name}",
                                             section.lessons,
                                             doc_mode=True,
-                                            source_file=course.source_file
+                                            source_file=course.source_file,
                                         )
                                         sequencer.target_lesson_name = target_lesson
                                         sequencer.run(stdscr)
                                         found = True
                                         break
-                                    if found: break
-                                if found: break
+                                    if found:
+                                        break
+                                if found:
+                                    break
 
                             # Case 2: Only part known — open part menu
                             elif target_part:
                                 for part in course.parts:
                                     if part.name != target_part:
                                         continue
-                                    if len(part.sections) == 1 and part.sections[0].name == "Main":
+                                    if (
+                                        len(part.sections) == 1
+                                        and part.sections[0].name == "Main"
+                                    ):
                                         from .lesson_sequencer import LessonSequencer
+
                                         sequencer = LessonSequencer(
                                             f"{course.name}: {part.name}",
                                             part.sections[0].lessons,
                                             doc_mode=True,
-                                            source_file=course.source_file
+                                            source_file=course.source_file,
                                         )
                                         sequencer.target_lesson_name = target_lesson
                                         sequencer.run(stdscr)
@@ -168,19 +183,27 @@ class Menu:
                                         self.run_section_menu(stdscr, course, part)
                                     found = True
                                     break
-                                if found: break
+                                if found:
+                                    break
 
                             # Case 3: Only course — open course normally
                             else:
-                                if len(course.parts) == 1 and course.parts[0].name == "Main":
+                                if (
+                                    len(course.parts) == 1
+                                    and course.parts[0].name == "Main"
+                                ):
                                     part = course.parts[0]
-                                    if len(part.sections) == 1 and part.sections[0].name == "Main":
+                                    if (
+                                        len(part.sections) == 1
+                                        and part.sections[0].name == "Main"
+                                    ):
                                         from .lesson_sequencer import LessonSequencer
+
                                         sequencer = LessonSequencer(
                                             course.name,
                                             part.sections[0].lessons,
                                             doc_mode=True,
-                                            source_file=course.source_file
+                                            source_file=course.source_file,
                                         )
                                         sequencer.target_lesson_name = target_lesson
                                         sequencer.run(stdscr)
@@ -197,7 +220,7 @@ class Menu:
                     else:
                         need_redraw = True
 
-                elif key == 27:  # ESC
+                elif is_quit_request(key):
                     stdscr.nodelay(False)
                     return
 
@@ -242,7 +265,9 @@ class Menu:
                             menu_start_y + i,
                             menu_x_pos,
                             text,
-                            curses.color_pair(1) if i == selected else curses.color_pair(2),
+                            curses.color_pair(1)
+                            if i == selected
+                            else curses.color_pair(2),
                         )
                         stdscr.clrtoeol()
                     except curses.error:
@@ -262,7 +287,7 @@ class Menu:
                     selected = (selected - 1) % total_items
                 elif key in (curses.KEY_DOWN, ord("j")):
                     selected = (selected + 1) % total_items
-                elif key in (curses.KEY_LEFT, ord("h")) or key == 27:
+                elif key in (curses.KEY_LEFT, ord("h")) or is_quit_request(key):
                     return
                 elif key in (curses.KEY_RIGHT, ord("l")):
                     part = course.parts[selected]
@@ -274,7 +299,7 @@ class Menu:
                             f"{course.name}: {part.name}",
                             part.sections[0].lessons,
                             doc_mode=self.doc_mode,
-                            source_file=course.source_file
+                            source_file=course.source_file,
                         )
                         sequencer.run(stdscr)
                     else:
@@ -325,7 +350,9 @@ class Menu:
                             menu_start_y + i,
                             menu_x_pos,
                             text,
-                            curses.color_pair(1) if i == selected else curses.color_pair(2),
+                            curses.color_pair(1)
+                            if i == selected
+                            else curses.color_pair(2),
                         )
                         stdscr.clrtoeol()
                     except curses.error:
@@ -345,7 +372,7 @@ class Menu:
                     selected = (selected - 1) % total_items
                 elif key in (curses.KEY_DOWN, ord("j")):
                     selected = (selected + 1) % total_items
-                elif key in (curses.KEY_LEFT, ord("h")) or key == 27:
+                elif key in (curses.KEY_LEFT, ord("h")) or is_quit_request(key):
                     return
                 elif key in (curses.KEY_RIGHT, ord("l")):
                     section = part.sections[selected]

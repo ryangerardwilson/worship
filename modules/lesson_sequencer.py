@@ -1,9 +1,9 @@
 # ~/Apps/rtutor/modules/lesson_sequencer.py
 import curses
 import sys
-from .structs import Lesson
 from .doc_mode import DocMode
 from .boom import Boom
+from .key_utils import is_quit_request
 
 
 class LessonSequencer:
@@ -73,7 +73,9 @@ class LessonSequencer:
 
                     lines_below = total_lines - 1 - current_line
                     if lines_below <= 20:
-                        desired_offset = max(0, current_line - int(available_height * 0.3))
+                        desired_offset = max(
+                            0, current_line - int(available_height * 0.3)
+                        )
                         offset = max(offset, desired_offset)
 
                     offset = max(0, min(offset, total_lines - available_height))
@@ -85,13 +87,16 @@ class LessonSequencer:
                 visible_range = range(start_idx, end_idx)
 
                 if need_redraw:
-
                     # Title on two lines
                     line1 = self.name
                     line2 = f"TYPE_MODE: {lesson.name}"
                     try:
-                        stdscr.addstr(0, 0, line1[:max_x], curses.color_pair(1) | curses.A_BOLD)
-                        stdscr.addstr(1, 0, line2[:max_x], curses.color_pair(1) | curses.A_BOLD)
+                        stdscr.addstr(
+                            0, 0, line1[:max_x], curses.color_pair(1) | curses.A_BOLD
+                        )
+                        stdscr.addstr(
+                            1, 0, line2[:max_x], curses.color_pair(1) | curses.A_BOLD
+                        )
                         stdscr.clrtoeol()
                     except curses.error:
                         pass
@@ -113,15 +118,20 @@ class LessonSequencer:
                             if char == "\t":
                                 for _ in range(4):
                                     try:
-                                        stdscr.addch(row, display_pos, " ", curses.color_pair(1))
+                                        stdscr.addch(
+                                            row, display_pos, " ", curses.color_pair(1)
+                                        )
                                     except:
                                         pass
                                     display_pos += 1
                             else:
                                 ch = char
                                 if input_pos < len(user_input):
-                                    if (input_pos < len(processed_lines[global_i]) and
-                                        user_input[input_pos] == processed_lines[global_i][input_pos]):
+                                    if (
+                                        input_pos < len(processed_lines[global_i])
+                                        and user_input[input_pos]
+                                        == processed_lines[global_i][input_pos]
+                                    ):
                                         ch = user_input[input_pos]
                                     else:
                                         ch = "█"
@@ -129,14 +139,18 @@ class LessonSequencer:
                                 if ch == "\n":
                                     ch = "↵"
                                 try:
-                                    stdscr.addch(row, display_pos, ch, curses.color_pair(1))
+                                    stdscr.addch(
+                                        row, display_pos, ch, curses.color_pair(1)
+                                    )
                                 except:
                                     pass
                                 display_pos += 1
 
                         while input_pos < len(user_input):
                             try:
-                                stdscr.addch(row, display_pos, "█", curses.color_pair(1))
+                                stdscr.addch(
+                                    row, display_pos, "█", curses.color_pair(1)
+                                )
                             except:
                                 pass
                             display_pos += 1
@@ -151,7 +165,9 @@ class LessonSequencer:
                     # Clear remaining lines
                     content_end_row = content_start_y + (end_idx - start_idx)
                     clear_start = content_end_row
-                    clear_end = max_y - 2 if total_lines - end_idx > 7 else content_end_row
+                    clear_end = (
+                        max_y - 2 if total_lines - end_idx > 7 else content_end_row
+                    )
 
                     for r in range(clear_start, clear_end):
                         try:
@@ -161,8 +177,12 @@ class LessonSequencer:
                             pass
 
                     # Stats + scroll indicator
-                    typed = sum(len(ui) for i, ui in enumerate(user_inputs) if not is_skip[i])
-                    total = sum(len(p) for i, p in enumerate(processed_lines) if not is_skip[i])
+                    typed = sum(
+                        len(ui) for i, ui in enumerate(user_inputs) if not is_skip[i]
+                    )
+                    total = sum(
+                        len(p) for i, p in enumerate(processed_lines) if not is_skip[i]
+                    )
                     stats = f"Typed {typed}/{total} chars"
 
                     scroll_info = ""
@@ -172,13 +192,18 @@ class LessonSequencer:
                         scroll_info = f"  [{top}-{bottom}/{total_lines}]"
 
                     try:
-                        stdscr.addstr(max_y - 2, 0, stats + scroll_info, curses.color_pair(1))
+                        stdscr.addstr(
+                            max_y - 2, 0, stats + scroll_info, curses.color_pair(1)
+                        )
                         stdscr.clrtoeol()
                     except curses.error:
                         pass
 
-                    instr = ("Lesson complete! Hit l for next or esc to exit"
-                             if lesson_finished else "Ctrl+R → restart | Esc → quit")
+                    instr = (
+                        "Lesson complete! Hit l for next or Esc/Q to exit"
+                        if lesson_finished
+                        else "Ctrl+R → restart | Esc/Q → quit"
+                    )
                     try:
                         stdscr.addstr(max_y - 1, 0, instr, curses.color_pair(1))
                         stdscr.clrtoeol()
@@ -219,22 +244,21 @@ class LessonSequencer:
                         break
                     changed = True
 
+                    if is_quit_request(key, typing_active=not lesson_finished):
+                        return False
+
                     if key == 3:  # Ctrl+C
                         sys.exit(0)
 
                     if lesson_finished:
-                        if key in (ord('l'), ord('L')):
+                        if key in (ord("l"), ord("L")):
                             next_lesson = True
                             break  # exit key-drain loop early
-                        elif key in (ord('q'), ord('Q'), 27):  # q or Esc
-                            return False
                     else:
                         if key == 18:  # Ctrl+R
                             user_inputs = [[] for _ in lines]
                             current_line = 0
                             lesson_finished = False
-                        elif key == 27:  # Esc 
-                            return False
                         elif is_skip[current_line]:
                             if key in (curses.KEY_ENTER, 10, 13):
                                 if current_line < total_lines - 1:
@@ -244,19 +268,28 @@ class LessonSequencer:
                                 if user_inputs[current_line]:
                                     user_inputs[current_line].pop()
                             elif key in (curses.KEY_ENTER, 10, 13):
-                                if user_inputs[current_line] == processed_lines[current_line]:
+                                if (
+                                    user_inputs[current_line]
+                                    == processed_lines[current_line]
+                                ):
                                     if current_line < total_lines - 1:
                                         current_line += 1
                             elif key == 9:  # Tab
                                 cur_len = len(user_inputs[current_line])
                                 req_len = len(processed_lines[current_line])
                                 if cur_len < req_len:
-                                    remaining = "".join(processed_lines[current_line][cur_len:])
+                                    remaining = "".join(
+                                        processed_lines[current_line][cur_len:]
+                                    )
                                     if remaining.startswith("    "):
-                                        user_inputs[current_line].extend([" ", " ", " ", " "])
+                                        user_inputs[current_line].extend(
+                                            [" ", " ", " ", " "]
+                                        )
                             elif 32 <= key <= 126:
                                 ch = chr(key)
-                                if len(user_inputs[current_line]) < len(processed_lines[current_line]):
+                                if len(user_inputs[current_line]) < len(
+                                    processed_lines[current_line]
+                                ):
                                     user_inputs[current_line].append(ch)
 
                 # After processing all pending keys
@@ -264,7 +297,10 @@ class LessonSequencer:
                     break  # Exit the outer while True → go to next lesson in for-loop
 
                 # Check if lesson just completed
-                if all(is_skip[i] or user_inputs[i] == processed_lines[i] for i in range(total_lines)):
+                if all(
+                    is_skip[i] or user_inputs[i] == processed_lines[i]
+                    for i in range(total_lines)
+                ):
                     lesson_finished = True
                     changed = True
 
