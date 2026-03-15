@@ -1,3 +1,4 @@
 *.swp
+__pycache__/
 modules/.ruff_cache
 modules/__pycache__

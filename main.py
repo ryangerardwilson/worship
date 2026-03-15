@@ -1,22 +1,49 @@
-# ~/Apps/rtutor/main.py
 #!/usr/bin/env python3
-import curses
-import sys
+"""Entry point for the worship CLI."""
+
+from __future__ import annotations
+
 import os
-from modules.menu import Menu
-from modules.course_parser import CourseParser
-from modules.flag_handler import handle_bookmark_flags
+from pathlib import Path
+import sys
 
-# Set TERM explicitly for consistent color support
-os.environ["TERM"] = "xterm-256color"
+from _version import __version__
+from rgw_cli_contract import AppSpec, resolve_install_script_path, run_app
+
+INSTALL_SCRIPT = resolve_install_script_path(__file__)
+HELP_TEXT = """worship
+
+flags:
+  worship -h
+    show this help
+  worship -v
+    print the installed version
+  worship -u
+    upgrade the installed app
+
+features:
+  launch the course selector in doc mode
+  # worship
+  worship
+
+  list, open, and delete saved bookmarks
+  # worship -b -l | worship -b <number> | worship -b -d <number>
+  worship -b -l
+  worship -b 2
+  worship -b -d 2
+"""
 
 
-def main():
-    # Set ESCDELAY early, before any curses initialization
-    # 25ms gives very snappy Esc response while still allowing most Alt+key and escape sequences to work reliably
+def _run_app(argv: list[str]) -> int:
+    import curses
+
+    from modules.course_parser import CourseParser
+    from modules.flag_handler import handle_bookmark_flags
+    from modules.menu import Menu
+
+    os.environ.setdefault("TERM", "xterm-256color")
     os.environ.setdefault("ESCDELAY", "25")
 
-    # Get the actual directory of main.py, resolving any symlinks
     script_path = os.path.realpath(__file__)
     script_dir = os.path.dirname(script_path)
     courses_dir = os.path.join(script_dir, "courses")
@@ -25,22 +52,33 @@ def main():
     courses = parser.parse_courses()
     if not courses:
         print("No valid courses found in the courses directory.")
-        sys.exit(1)
+        return 1
 
     handle_bookmark_flags(courses)
 
-    # Otherwise, proceed with menus.
-    # Doc mode is now the default. -d/--doc flags are still accepted but redundant.
     doc_mode = True
-    if ("-d" in sys.argv) or ("--doc" in sys.argv):
-        doc_mode = True  # Explicitly requested (no change needed)
+    if "-d" in argv or "--doc" in argv:
+        doc_mode = True
 
     menu = Menu(courses, doc_mode=doc_mode)
     try:
         curses.wrapper(menu.run)
     except KeyboardInterrupt:
-        sys.exit(0)
+        return 0
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = list(sys.argv[1:] if argv is None else argv)
+    spec = AppSpec(
+        app_name="worship",
+        version=__version__,
+        help_text=HELP_TEXT,
+        install_script_path=INSTALL_SCRIPT,
+        no_args_mode="dispatch",
+    )
+    return run_app(spec, args, _run_app)
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
