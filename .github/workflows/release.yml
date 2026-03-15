@@ -1,0 +1,42 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set version env
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#v}"
+          echo "TAG=${TAG}" >> "$GITHUB_ENV"
+          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+
+      - name: Build release bundle
+        run: |
+          set -euo pipefail
+          mkdir -p dist/worship
+          cp main.py install.sh README.md requirements.txt _version.py dist/worship/
+          cp -R courses dist/worship/
+          cp -R modules dist/worship/
+          printf '__version__ = "%s"\n' "${VERSION}" > dist/worship/_version.py
+          tar -C dist -czf worship.tar.gz worship
+
+      - name: Create release and upload asset
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.TAG }}
+          files: |
+            worship.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

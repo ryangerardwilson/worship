@@ -28,7 +28,7 @@ def test_main_delegates_upgrade_to_contract_runtime(monkeypatch):
 
 def test_install_script_creates_app_local_venv():
     script = (ROOT / "install.sh").read_text(encoding="utf-8")
-    assert 'VENV_DIR="${APP_HOME}/venv"' in script
+    assert 'VENV_DIR="$APP_HOME/venv"' in script
     assert 'python3 -m venv "$VENV_DIR"' in script
     assert '"$VENV_DIR/bin/pip" install --disable-pip-version-check -r "${SOURCE_DIR}/requirements.txt"' in script
     assert 'exec "${VENV_DIR}/bin/python" "${SOURCE_DIR}/main.py" "\\$@"' in script

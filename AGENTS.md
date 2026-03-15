@@ -8,6 +8,6 @@
 ## Project-specific Rules
 - `worship` keeps its no-arg behavior as the primary launch path into the curses UI. `-h` must document that clearly.
 - `worship` does not currently own a user-editable config file. Do not add `conf` unless the app starts persisting user-facing config.
-- Until a tagged release workflow exists, `worship` installs from source snapshots rather than GitHub release artifacts.
-- During that source-install phase, checked-in `_version.py` is the runtime version source of truth and should be updated deliberately when install-facing behavior changes.
+- Keep `worship` on the shared release contract with top-level `install.sh` and `push_release_upgrade.sh`.
+- Tagged builds stamp `_version.py` in the shipped source bundle. Keep the checked-in file at `0.0.0`.
 - Keep global flag parsing in `main.py` ahead of curses-heavy imports so `-h`, `-v`, and `-u` stay fast.

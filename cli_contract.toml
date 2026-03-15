@@ -1,0 +1,6 @@
+[app]
+name = "worship"
+repo = "ryangerardwilson/worship"
+install_strategy = "python-source"
+release_asset = "worship.tar.gz"
+install_test_path = "test_install_contract.py"

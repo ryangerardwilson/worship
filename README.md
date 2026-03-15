@@ -10,10 +10,16 @@ Install from the local checkout:
 bash install.sh -b "$(pwd)"
 ```
 
-Install the latest main-branch source snapshot:
+Install the latest tagged release:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ryangerardwilson/worship/main/install.sh | bash
+```
+
+Install a specific version:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ryangerardwilson/worship/main/install.sh | bash -s -- -v 0.1.0
 ```
 
 ## Usage
@@ -32,3 +38,5 @@ worship -b -d 2
 - `worship -h` shows help.
 - `worship -v` prints the installed version from `_version.py`.
 - `worship -u` upgrades through `install.sh`.
+
+Source checkouts keep `_version.py` at `0.0.0`; tagged release bundles stamp the shipped artifact with the real version.
