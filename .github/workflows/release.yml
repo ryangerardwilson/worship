@@ -27,6 +27,7 @@ jobs:
           set -euo pipefail
           mkdir -p dist/worship
           cp main.py install.sh README.md requirements.txt _version.py dist/worship/
+          cp -R rgw_cli_contract dist/worship/
           cp -R courses dist/worship/
           cp -R modules dist/worship/
           printf '__version__ = "%s"\n' "${VERSION}" > dist/worship/_version.py

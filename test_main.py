@@ -29,6 +29,12 @@ def test_main_delegates_upgrade_to_contract_runtime(monkeypatch):
 def test_install_script_creates_app_local_venv():
     script = (ROOT / "install.sh").read_text(encoding="utf-8")
     assert 'VENV_DIR="$APP_HOME/venv"' in script
-    assert 'python3 -m venv "$VENV_DIR"' in script
-    assert '"$VENV_DIR/bin/pip" install --disable-pip-version-check -r "${SOURCE_DIR}/requirements.txt"' in script
+    assert 'create_venv() {' in script
+    assert '"$PYTHON_BIN" -m venv --without-pip "$VENV_DIR"' in script
+    assert 'virtualenv --python "$PYTHON_BIN" --without-pip "$VENV_DIR"' in script
     assert 'exec "${VENV_DIR}/bin/python" "${SOURCE_DIR}/main.py" "\\$@"' in script
+
+
+def test_release_bundle_includes_vendored_contract() -> None:
+    workflow = (ROOT / ".github" / "workflows" / "release.yml").read_text(encoding="utf-8")
+    assert "cp -R rgw_cli_contract dist/worship/" in workflow
