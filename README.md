@@ -16,6 +16,13 @@ Install the latest tagged release:
 curl -fsSL https://raw.githubusercontent.com/ryangerardwilson/worship/main/install.sh | bash
 ```
 
+Manually add this to `~/.bashrc`, then reload your shell:
+
+```bash
+export PATH="$HOME/.worship/bin:$PATH"
+source ~/.bashrc
+```
+
 Install a specific version:
 
 ```bash
