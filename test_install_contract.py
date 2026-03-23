@@ -8,13 +8,25 @@ import unittest
 INSTALLER = Path(__file__).resolve().parent / "install.sh"
 if not INSTALLER.exists():
     INSTALLER = Path(__file__).resolve().parents[1] / "install.sh"
-ROOT = INSTALLER.resolve().parent
 
 
 class InstallContractTests(unittest.TestCase):
     def _write_executable(self, path: Path, body: str) -> None:
         path.write_text(body, encoding="utf-8")
         path.chmod(0o755)
+
+    def _run_installer(self, home_dir: Path, *args: str, path_prefix: Path | None = None) -> subprocess.CompletedProcess[str]:
+        env = os.environ.copy()
+        env["HOME"] = str(home_dir)
+        if path_prefix is not None:
+            env["PATH"] = f"{path_prefix}:{env['PATH']}"
+        return subprocess.run(
+            ["/usr/bin/bash", str(INSTALLER), *args],
+            capture_output=True,
+            text=True,
+            env=env,
+            check=True,
+        )
 
     def test_dash_v_without_argument_prints_latest_release(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -35,17 +47,7 @@ class InstallContractTests(unittest.TestCase):
                 "exit 1\n",
             )
 
-            env = os.environ.copy()
-            env["PATH"] = f"{bin_dir}:{env['PATH']}"
-            env["HOME"] = str(home_dir)
-
-            result = subprocess.run(
-                ["/usr/bin/bash", str(INSTALLER), "-v"],
-                capture_output=True,
-                text=True,
-                env=env,
-                check=True,
-            )
+            result = self._run_installer(home_dir, "-v", path_prefix=bin_dir)
 
             self.assertEqual(result.stdout.strip(), "0.1.21")
 
@@ -78,47 +80,43 @@ class InstallContractTests(unittest.TestCase):
                 "exit 1\n",
             )
 
-            env = os.environ.copy()
-            env["PATH"] = f"{bin_dir}:{env['PATH']}"
-            env["HOME"] = str(home_dir)
-
-            result = subprocess.run(
-                ["/usr/bin/bash", str(INSTALLER), "-u"],
-                capture_output=True,
-                text=True,
-                env=env,
-                check=True,
-            )
+            result = self._run_installer(home_dir, "-u", path_prefix=bin_dir)
 
             self.assertIn("already installed", result.stdout)
+            self.assertTrue((Path('$HOME/.local/bin'.replace("$HOME", str(home_dir))) / 'worship').exists())
 
-    def test_local_source_install_writes_venv_launcher(self):
+    def test_local_source_install_writes_managed_launchers(self):
         with tempfile.TemporaryDirectory() as tmp:
-            tmp_path = Path(tmp)
-            home_dir = tmp_path / "home"
-            home_dir.mkdir()
+            home_dir = Path(tmp)
+            bashrc_path = home_dir / '.bashrc'
+            bashrc_path.write_text('# existing shell config\n', encoding='utf-8')
 
-            env = os.environ.copy()
-            env["HOME"] = str(home_dir)
+            result = self._run_installer(home_dir, "-b", str(INSTALLER.parent), "-n")
 
-            subprocess.run(
-                ["/usr/bin/bash", str(INSTALLER), "-b", str(ROOT), "-n"],
+            internal_launcher = home_dir / ".worship" / "bin" / 'worship'
+            self.assertTrue(internal_launcher.exists())
+            internal_text = internal_launcher.read_text(encoding="utf-8")
+            self.assertIn('exec "', internal_text)
+            self.assertIn('/.worship/venv/bin/python', internal_text)
+            self.assertIn('/.worship/app/source/main.py', internal_text)
+            self.assertEqual(
+                bashrc_path.read_text(encoding='utf-8'),
+                '# existing shell config\n',
+            )
+            public_launcher = Path('$HOME/.local/bin'.replace("$HOME", str(home_dir))) / 'worship'
+            self.assertTrue(public_launcher.exists())
+            public_text = public_launcher.read_text(encoding="utf-8")
+            self.assertIn('# Managed by rgw_cli_contract local-bin launcher', public_text)
+            self.assertIn(f'exec "{internal_launcher}" "$@"', public_text)
+            version = subprocess.run(
+                [str(public_launcher), '-v'],
                 capture_output=True,
                 text=True,
-                env=env,
+                env={**os.environ, 'HOME': str(home_dir)},
                 check=True,
             )
-
-            launcher_path = home_dir / ".worship" / "bin" / "worship"
-            venv_python = home_dir / ".worship" / "venv" / "bin" / "python"
-            source_main = home_dir / ".worship" / "app" / "source" / "main.py"
-
-            self.assertTrue(launcher_path.exists())
-            self.assertTrue(venv_python.exists())
-            launcher = launcher_path.read_text(encoding="utf-8")
-            self.assertIn(str(venv_python), launcher)
-            self.assertIn(str(source_main), launcher)
-            self.assertNotIn("python3", launcher)
+            self.assertEqual(version.stdout.strip(), '0.0.0')
+            self.assertIn(f"Manually add to ~/.bashrc if needed: export PATH={public_launcher.parent}:$PATH", result.stdout)
 
 
 if __name__ == "__main__":

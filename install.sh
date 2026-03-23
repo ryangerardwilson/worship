@@ -9,6 +9,9 @@ APP_DIR="$APP_HOME/app"
 SOURCE_DIR="$APP_DIR/source"
 VENV_DIR="$APP_HOME/venv"
 FILENAME="worship.tar.gz"
+PUBLIC_BIN_DIR="$HOME/.local/bin"
+PUBLIC_LAUNCHER="$PUBLIC_BIN_DIR/${APP}"
+
 
 usage() {
   cat <<EOF
@@ -21,7 +24,7 @@ Options:
   -v [<version>]             Print the latest release version, or install a specific one
   -u                         Upgrade to the latest release only when newer
   -b <path>                  Install from a local checkout or source bundle
-  -n                         Compatibility no-op; installer never modifies shell config
+  -n                         Do not modify shell config to add to PATH
 
       --help                 Compatibility alias for -h
       --version [<version>]  Compatibility alias for -v
@@ -49,28 +52,26 @@ die() {
   exit 1
 }
 
-create_venv() {
-  local venv_log="$tmp_dir/venv-create.log"
-
-  rm -rf "$VENV_DIR"
-  if "$PYTHON_BIN" -m venv --without-pip "$VENV_DIR" >"$venv_log" 2>&1; then
+installed_command_path() {
+  if command -v "${APP}" >/dev/null 2>&1; then
+    command -v "${APP}"
     return 0
   fi
+  if [[ -x "${INSTALL_DIR}/${APP}" ]]; then
+    printf '%s\n' "${INSTALL_DIR}/${APP}"
+    return 0
+  fi
+  if [[ -x "${PUBLIC_LAUNCHER}" ]]; then
+    printf '%s\n' "${PUBLIC_LAUNCHER}"
+    return 0
+  fi
+  return 1
+}
 
-  rm -rf "$VENV_DIR"
-  if command -v virtualenv >/dev/null 2>&1; then
-    if virtualenv --python "$PYTHON_BIN" --without-pip "$VENV_DIR" >"$venv_log" 2>&1; then
-      return 0
-    fi
-  fi
-
-  if [[ -s "$venv_log" ]]; then
-    cat "$venv_log" >&2
-  fi
-  if command -v virtualenv >/dev/null 2>&1; then
-    die "Unable to create virtual environment with python3 -m venv or virtualenv."
-  fi
-  die "Unable to create virtual environment with python3 -m venv. Install python3-venv or virtualenv."
+read_installed_version() {
+  local installed_cmd
+  installed_cmd="$(installed_command_path)" || return 0
+  "$installed_cmd" -v 2>/dev/null || true
 }
 
 extract_source() {
@@ -110,6 +111,46 @@ get_latest_version() {
   printf '%s\n' "$latest_version_cache"
 }
 
+
+write_public_launcher() {
+  if [[ -e "$PUBLIC_LAUNCHER" && ! -L "$PUBLIC_LAUNCHER" && ! -f "$PUBLIC_LAUNCHER" ]]; then
+    die "Refusing to overwrite non-file launcher: $PUBLIC_LAUNCHER"
+  fi
+
+  if [[ -L "$PUBLIC_LAUNCHER" ]]; then
+    local resolved
+    resolved="$(readlink -f "$PUBLIC_LAUNCHER" 2>/dev/null || true)"
+    if [[ "$resolved" != "${INSTALL_DIR}/${APP}" ]]; then
+      die "Refusing to overwrite existing symlink launcher: $PUBLIC_LAUNCHER"
+    fi
+  elif [[ -f "$PUBLIC_LAUNCHER" ]] && ! grep -Fq '# Managed by rgw_cli_contract local-bin launcher' "$PUBLIC_LAUNCHER" 2>/dev/null; then
+    die "Refusing to overwrite existing launcher: $PUBLIC_LAUNCHER"
+  fi
+
+  mkdir -p "$PUBLIC_BIN_DIR"
+  cat > "${PUBLIC_LAUNCHER}" <<EOF
+#!/usr/bin/env bash
+# Managed by rgw_cli_contract local-bin launcher
+set -euo pipefail
+exec "${INSTALL_DIR}/${APP}" "\$@"
+EOF
+  chmod 755 "${PUBLIC_LAUNCHER}"
+}
+
+finalize_install() {
+  write_public_launcher
+}
+
+print_manual_shell_steps() {
+  local printed=false
+  if [[ ":$PATH:" != *":$PUBLIC_BIN_DIR:"* ]]; then
+    print_message info "Manually add to ~/.bashrc if needed: export PATH=$PUBLIC_BIN_DIR:\$PATH"
+    printed=true
+  fi
+  if [[ "$printed" == "true" ]]; then
+    print_message info "Reload your shell: source ~/.bashrc"
+  fi
+}
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -158,18 +199,17 @@ if $upgrade; then
   [[ -z "$binary_path" ]] || die "-u cannot be used with -b"
   [[ -z "$requested_version" ]] || die "-u cannot be combined with -v <version>"
   requested_version="$(get_latest_version)"
-  if command -v "${APP}" >/dev/null 2>&1; then
-    installed_version="$(${APP} -v 2>/dev/null || true)"
-    installed_version="${installed_version#v}"
-    if [[ -n "$installed_version" && "$installed_version" == "$requested_version" ]]; then
-      print_message info "${APP} version ${requested_version} already installed"
-      exit 0
-    fi
+  installed_version="$(read_installed_version)"
+  installed_version="${installed_version#v}"
+  if [[ -n "$installed_version" && "$installed_version" == "$requested_version" ]]; then
+    finalize_install
+    print_manual_shell_steps
+    print_message info "${APP} version ${requested_version} already installed"
+    exit 0
   fi
 fi
 
 command -v python3 >/dev/null 2>&1 || { print_message error "'python3' is required but not installed."; exit 1; }
-PYTHON_BIN="$(command -v python3)"
 mkdir -p "$INSTALL_DIR" "$APP_DIR"
 tmp_dir="${TMPDIR:-/tmp}/${APP}_install_$$"
 rm -rf "$tmp_dir"
@@ -197,13 +237,13 @@ else
     fi
   fi
 
-  if command -v "${APP}" >/dev/null 2>&1; then
-    installed_version="$(${APP} -v 2>/dev/null || true)"
-    installed_version="${installed_version#v}"
-    if [[ -n "$installed_version" && "$installed_version" == "$specific_version" ]]; then
-      print_message info "${APP} version ${specific_version} already installed"
-      exit 0
-    fi
+  installed_version="$(read_installed_version)"
+  installed_version="${installed_version#v}"
+  if [[ -n "$installed_version" && "$installed_version" == "$specific_version" ]]; then
+    finalize_install
+    print_manual_shell_steps
+    print_message info "${APP} version ${specific_version} already installed"
+    exit 0
   fi
 
   url="https://github.com/${REPO}/releases/download/v${specific_version}/${FILENAME}"
@@ -215,16 +255,22 @@ fi
 [[ -f "${SOURCE_DIR}/main.py" ]] || die "Source bundle missing main.py"
 [[ -f "${SOURCE_DIR}/_version.py" ]] || die "Source bundle missing _version.py"
 
-create_venv
+
+python3 -m venv "$VENV_DIR"
+"$VENV_DIR/bin/pip" install --disable-pip-version-check -U pip >/dev/null
+if [[ -f "${SOURCE_DIR}/requirements.txt" ]]; then
+  "$VENV_DIR/bin/pip" install --disable-pip-version-check -r "${SOURCE_DIR}/requirements.txt" >/dev/null
+fi
 
 cat > "${INSTALL_DIR}/${APP}" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
+
 exec "${VENV_DIR}/bin/python" "${SOURCE_DIR}/main.py" "\$@"
 EOF
 chmod 755 "${INSTALL_DIR}/${APP}"
 
+finalize_install
 
-print_message info "Manually add to ~/.bashrc: export PATH=$INSTALL_DIR:\$PATH"
-print_message info "Reload your shell: source ~/.bashrc"
+print_manual_shell_steps
 print_message info "Run: ${APP} -h"
